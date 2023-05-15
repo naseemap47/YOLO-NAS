@@ -1,0 +1,9 @@
+names:
+- Paper
+- Rock
+- Scissors
+nc: 3
+
+test: test/images
+train: train/images
+val: valid/images

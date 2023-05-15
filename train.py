@@ -1,18 +1,26 @@
-from super_gradients.training import dataloaders
 from super_gradients.training.dataloaders.dataloaders import coco_detection_yolo_format_train, coco_detection_yolo_format_val
-from IPython.display import clear_output
 from super_gradients.training import Trainer
 from super_gradients.training import models
 from super_gradients.training.losses import PPYoloELoss
 from super_gradients.training.metrics import DetectionMetrics_050
 from super_gradients.training.models.detection_models.pp_yolo_e import PPYoloEPostPredictionCallback
-from super_gradients.training import training_hyperparams
+import argparse
+import yaml
 
 
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--data", type=str, required=True,
+                help="path to data.yaml")
+ap.add_argument("-n", "--name", type=str, required=True,
+                help="Checkpoint dir name")
 
-CHECKPOINT_DIR = 'checkpoints'
+args = vars(ap.parse_args())
+
+
+CHECKPOINT_DIR = args['name']
 trainer = Trainer(experiment_name='my_first_yolonas_run', ckpt_root_dir=CHECKPOINT_DIR)
 batch_size = 4
+dataset_params = yaml.safe_load(open(args['data'], 'r'))
 dataset_params = {
     'data_dir':'Data',
     'train_images_dir':'train/images',
