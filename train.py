@@ -34,8 +34,7 @@ else:
 n = 0
 while True:
     if not os.path.exists(os.path.join('runs', f'{name}{n}')):
-        if n > 0:
-            name = f'{name}{n}'
+        name = f'{name}{n}'
         os.makedirs(os.path.join('runs', name))
         print(f"[INFO] Checkpoints saved in {os.path.join('runs', name)}")
         break
