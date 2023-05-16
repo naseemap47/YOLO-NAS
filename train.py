@@ -34,8 +34,10 @@ else:
 n = 0
 while True:
     if not os.path.exists(os.path.join('runs', f'{name}{n}')):
-        os.makedirs(os.path.join('runs', f'{name}{n}'))
-        print(f"[INFO] Checkpoints saved in {os.path.join('runs', f'{name}{n}')}")
+        if n > 0:
+            name = f'{name}{n}'
+        os.makedirs(os.path.join('runs', name))
+        print(f"[INFO] Checkpoints saved in {os.path.join('runs', name)}")
         break
     else:
         n += 1
@@ -138,25 +140,19 @@ trainer.train(
 )
 
 
-# # Best Weights
-# best_model = models.get('yolo_nas_s',
-#                         num_classes=len(yaml_params['names']),
-#                         checkpoint_path="checkpoints/my_first_yolonas_run/ckpt_best.pth")
-# last weights
-# best_model = models.get('yolo_nas_l',
-#                         num_classes=len(yaml_params['names']),
-#                         checkpoint_path="checkpoints/my_first_yolonas_run/ckpt_latest.pth")
-
 # Evaluating on Test Dataset
-# trainer.test(model=best_model,
-#             test_loader=test_data,
-#             test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
-#                                                    top_k_predictions=300, 
-#                                                    num_cls=len(yaml_params['names']), 
-#                                                    normalize_targets=True, 
-#                                                    post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
-#                                                                                                           nms_top_k=1000, 
-#                                                                                                           max_predictions=300,                                                                              
-#                                                                                                           nms_threshold=0.7)
-#                                                   ))
+best_model = models.get(args['model'],
+                        num_classes=len(yaml_params['names']),
+                        checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
+trainer.test(model=best_model,
+            test_loader=test_data,
+            test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
+                                                   top_k_predictions=300, 
+                                                   num_cls=len(yaml_params['names']), 
+                                                   normalize_targets=True, 
+                                                   post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
+                                                                                                          nms_top_k=1000, 
+                                                                                                          max_predictions=300,                                                                              
+                                                                                                          nms_threshold=0.7)
+                                                  ))
 
