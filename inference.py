@@ -43,7 +43,7 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
 model = models.get(
     args['model'],
     num_classes=len(yaml_params['names']), 
-    pretrained_weights=args["weight"]
+    checkpoint_path=args["weight"]
 )
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")
 print('Class Names: ', yaml_params['names'])
