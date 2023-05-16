@@ -50,8 +50,9 @@ print('Class Names: ', yaml_params['names'])
 colors = [[random.randint(0, 255) for _ in range(3)] for _ in yaml_params['names']]
 
 # Reading Video/Cam/RTSP
-if args['source'].isnumeric():
-    video_path = int(args['source'])
+video_path = args['source']
+if video_path.isnumeric():
+    video_path = int(video_path)
 cap = cv2.VideoCapture(video_path)
 
 # Get the width and height of the video - SAVE VIDEO.
@@ -61,7 +62,7 @@ if args['save']:
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     os.makedirs(os.path.join('runs', 'detect'), exist_ok=True)
-    if not video_path.isnumeric():
+    if not str(video_path).isnumeric():
         path_save = os.path.join('runs', 'detect', os.path.split(video_path)[1])
     else:
         c = 0
