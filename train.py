@@ -6,82 +6,89 @@ from super_gradients.training.metrics import DetectionMetrics_050
 from super_gradients.training.models.detection_models.pp_yolo_e import PPYoloEPostPredictionCallback
 import argparse
 import yaml
+import os
 
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--data", type=str, required=True,
                 help="path to data.yaml")
-ap.add_argument("-n", "--name", type=str, required=True,
+ap.add_argument("-n", "--name", type=str,
                 help="Checkpoint dir name")
+ap.add_argument("-b", "--batch", type=int, default=6,
+                help="Training batch size")
+ap.add_argument("-e", "--epoch", type=int, default=100,
+                help="Training number of epochs")
+ap.add_argument("-w", "--worker", type=int, default=2,
+                help="Training number of workers")
+
 
 args = vars(ap.parse_args())
 
+if args['name'] is None:
+    name = 'train'
+else:
+    name = args['name']
+n = 0
+while True:
+    if not os.path.exists(os.path.join('runs', f'{name}{n}')):
+        os.makedirs(os.path.join('runs', f'{name}{n}'))
+        print(f"[INFO] Checkpoints saved in {os.path.join('runs', f'{name}{n}')}")
+        break
+    else:
+        n += 1
 
-CHECKPOINT_DIR = args['name']
-trainer = Trainer(experiment_name='my_first_yolonas_run', ckpt_root_dir=CHECKPOINT_DIR)
-batch_size = 4
-dataset_params = yaml.safe_load(open(args['data'], 'r'))
-dataset_params = {
-    'data_dir':'Data',
-    'train_images_dir':'train/images',
-    'train_labels_dir':'train/labels',
-    'val_images_dir':'valid/images',
-    'val_labels_dir':'valid/labels',
-    'test_images_dir':'test/images',
-    'test_labels_dir':'test/labels',
-    'classes': ['Paper', 'Rock', 'Scissors']
-}
-
+trainer = Trainer(experiment_name=name, ckpt_root_dir='runs')
+yaml_params = yaml.safe_load(open(args['data'], 'r'))
 
 train_data = coco_detection_yolo_format_train(
     dataset_params={
-        'data_dir': dataset_params['data_dir'],
-        'images_dir': dataset_params['train_images_dir'],
-        'labels_dir': dataset_params['train_labels_dir'],
-        'classes': dataset_params['classes']
+        'data_dir': yaml_params['Dir'],
+        'images_dir': yaml_params['images']['train'],
+        'labels_dir': yaml_params['labels']['train'],
+        'classes': yaml_params['names']
     },
     dataloader_params={
-        'batch_size':batch_size,
-        'num_workers':2
+        'batch_size': args['batch'],
+        'num_workers': args['worker']
     }
 )
 
 val_data = coco_detection_yolo_format_val(
     dataset_params={
-        'data_dir': dataset_params['data_dir'],
-        'images_dir': dataset_params['val_images_dir'],
-        'labels_dir': dataset_params['val_labels_dir'],
-        'classes': dataset_params['classes']
+        'data_dir': yaml_params['Dir'],
+        'images_dir': yaml_params['images']['val'],
+        'labels_dir': yaml_params['labels']['val'],
+        'classes': yaml_params['names']
     },
     dataloader_params={
-        'batch_size':batch_size,
-        'num_workers':2
+        'batch_size':args['batch'],
+        'num_workers': args['worker']
     }
 )
 
 test_data = coco_detection_yolo_format_val(
     dataset_params={
-        'data_dir': dataset_params['data_dir'],
-        'images_dir': dataset_params['test_images_dir'],
-        'labels_dir': dataset_params['test_labels_dir'],
-        'classes': dataset_params['classes']
+        'data_dir': yaml_params['Dir'],
+        'images_dir': yaml_params['images']['test'],
+        'labels_dir': yaml_params['labels']['test'],
+        'classes': yaml_params['names']
     },
     dataloader_params={
-        'batch_size':batch_size,
-        'num_workers':2
+        'batch_size':args['batch'],
+        'num_workers': args['worker']
     }
 )
 
-# clear_output()
 
-model = models.get('yolo_nas_s', 
-                   num_classes=len(dataset_params['classes']), 
-                   pretrained_weights="coco"
-                   )
+model = models.get(
+    'yolo_nas_s', 
+    num_classes=len(yaml_params['names']), 
+    pretrained_weights="coco"
+)
 
 train_params = {
     # ENABLING SILENT MODE
-    'silent_mode': True,
+    'silent_mode': False,
     "average_best_models":True,
     "warmup_mode": "linear_epoch_step",
     "warmup_initial_lr": 1e-6,
@@ -95,12 +102,12 @@ train_params = {
     "ema": True,
     "ema_params": {"decay": 0.9, "decay_type": "threshold"},
     # ONLY TRAINING FOR 10 EPOCHS FOR THIS EXAMPLE NOTEBOOK
-    "max_epochs": 10 ,
+    "max_epochs": args['epoch'],
     "mixed_precision": True,
     "loss": PPYoloELoss(
         use_static_assigner=False,
         # NOTE: num_classes needs to be defined here
-        num_classes=len(dataset_params['classes']),
+        num_classes=len(yaml_params['names']),
         reg_max=16
     ),
     "valid_metrics_list": [
@@ -108,7 +115,7 @@ train_params = {
             score_thres=0.1,
             top_k_predictions=300,
             # NOTE: num_classes needs to be defined here
-            num_cls=len(dataset_params['classes']),
+            num_cls=len(yaml_params['names']),
             normalize_targets=True,
             post_prediction_callback=PPYoloEPostPredictionCallback(
                 score_threshold=0.01,
@@ -121,19 +128,21 @@ train_params = {
     "metric_to_watch": 'mAP@0.50'
 }
 
-trainer.train(model=model, 
-              training_params=train_params, 
-              train_loader=train_data, 
-              valid_loader=val_data)
+trainer.train(
+    model=model, 
+    training_params=train_params, 
+    train_loader=train_data, 
+    valid_loader=val_data
+)
 
 
-# Best Weights
-best_model = models.get('yolo_nas_s',
-                        num_classes=len(dataset_params['classes']),
-                        checkpoint_path="checkpoints/my_first_yolonas_run/ckpt_best.pth")
+# # Best Weights
+# best_model = models.get('yolo_nas_s',
+#                         num_classes=len(yaml_params['names']),
+#                         checkpoint_path="checkpoints/my_first_yolonas_run/ckpt_best.pth")
 # last weights
 # best_model = models.get('yolo_nas_l',
-#                         num_classes=len(dataset_params['classes']),
+#                         num_classes=len(yaml_params['names']),
 #                         checkpoint_path="checkpoints/my_first_yolonas_run/ckpt_latest.pth")
 
 # Evaluating on Test Dataset
@@ -141,7 +150,7 @@ best_model = models.get('yolo_nas_s',
 #             test_loader=test_data,
 #             test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
 #                                                    top_k_predictions=300, 
-#                                                    num_cls=len(dataset_params['classes']), 
+#                                                    num_cls=len(yaml_params['names']), 
 #                                                    normalize_targets=True, 
 #                                                    post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
 #                                                                                                           nms_top_k=1000, 
