@@ -1,29 +1,29 @@
-from super_gradients.training import dataloaders
-from super_gradients.training.dataloaders.dataloaders import coco_detection_yolo_format_train, coco_detection_yolo_format_val
-from IPython.display import clear_output
-from super_gradients.training import Trainer
 from super_gradients.training import models
-from super_gradients.training.losses import PPYoloELoss
-from super_gradients.training.metrics import DetectionMetrics_050
-from super_gradients.training.models.detection_models.pp_yolo_e import PPYoloEPostPredictionCallback
-from super_gradients.training import training_hyperparams
 import torch
 import cv2
 import random
 import numpy as np
 import time
+import argparse
+import yaml
+import os
 
 
-dataset_params = {
-    'data_dir':'Data',
-    'train_images_dir':'train/images',
-    'train_labels_dir':'train/labels',
-    'val_images_dir':'valid/images',
-    'val_labels_dir':'valid/labels',
-    'test_images_dir':'test/images',
-    'test_labels_dir':'test/labels',
-    'classes': ['Paper', 'Rock', 'Scissors']
-}
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--data", type=str, required=True,
+                help="path to data.yaml")
+ap.add_argument("-m", "--model", type=str, required=True,
+                help="Model type (eg: yolo_nas_s)")
+ap.add_argument("-w", "--weight", type=str, required=True,
+                help="path to trained model weight")
+ap.add_argument("-s", "--source", type=str, required=True,
+                help="video path/cam-id/RTSP")
+ap.add_argument("-c", "--conf", type=float, default=0.25,
+                help="model prediction confidence (0<conf<1)")
+ap.add_argument("--save", action='store_true',
+                help="Save video")
+args = vars(ap.parse_args())
+yaml_params = yaml.safe_load(open(args['data'], 'r'))
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=3):
     # Plots one bounding box on image img
@@ -38,18 +38,43 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
         cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
         cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
-model = models.get('yolo_nas_s',
-                        num_classes=len(dataset_params['classes']),
-                        checkpoint_path="checkpoints/my_first_yolonas_run/ckpt_best.pth")
 
+# Load YOLO-NAS Model
+model = models.get(
+    args['model'],
+    num_classes=len(yaml_params['names']), 
+    pretrained_weights=args["weight"]
+)
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-# class_names = open('classes.txt', 'r').read().splitlines()
-class_names = dataset_params['classes']
-print('Class Names: ', class_names)
-colors = [[random.randint(0, 255) for _ in range(3)] for _ in class_names]
+print('Class Names: ', yaml_params['names'])
+colors = [[random.randint(0, 255) for _ in range(3)] for _ in yaml_params['names']]
 
-# http://159.130.70.206/mjpg/video.mjpg
-cap = cv2.VideoCapture(0)
+# Reading Video/Cam/RTSP
+if args['source'].isnumeric():
+    video_path = int(args['source'])
+cap = cv2.VideoCapture(video_path)
+
+# Get the width and height of the video - SAVE VIDEO.
+if args['save']:
+    original_video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    original_video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    os.makedirs(os.path.join('runs', 'detect'), exist_ok=True)
+    if not video_path.isnumeric():
+        path_save = os.path.join('runs', 'detect', os.path.split(video_path)[1])
+    else:
+        c = 0
+        while True:
+            if not os.path.exists(os.path.join('runs', 'detect', f'cam{c}.mp4')):
+                path_save = os.path.join('runs', 'detect', f'cam{c}.mp4')
+                break
+            else:
+                c += 1
+    out_vid = cv2.VideoWriter(path_save, 
+                         cv2.VideoWriter_fourcc(*'mp4v'),
+                         fps, (original_video_width, original_video_height))
+
 p_time = 0
 while True:
     success, img = cap.read()
@@ -57,14 +82,12 @@ while True:
         print('[INFO] Failed to read...')
         break
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    preds = next(model.predict(img_rgb)._images_prediction_lst)
-    # class_names_ = preds.class_names
-    # print(class_names_)
+    preds = next(model.predict(img_rgb, conf=args['conf'])._images_prediction_lst)
+    class_names = preds.class_names
     dp = preds.prediction
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
     for box, cnf, cs in zip(bboxes, confs, labels):
-        if cnf > 0.6:
-            plot_one_box(box[:4], img, label=f'{class_names[cs]} {cnf:.3}', color=colors[cs])
+        plot_one_box(box[:4], img, label=f'{class_names[cs]} {cnf:.3}', color=colors[cs])
 
     # FPS
     c_time = time.time()
@@ -76,12 +99,17 @@ while True:
         (0, 255, 0), 2
     )
 
+    # Write Video
+    if args['save']:
+        out_vid.write(img)
+
     k = cv2.waitKey(1)
     cv2.imshow('img', img)
     if k == ord('q'):
         break
 
 cap.release()
-# if save:
-#     out_vid.release()
+if args['save']:
+    out_vid.release()
+    print(f"[INFO] Outout Video Saved in {path_save}")
 cv2.destroyAllWindows()
