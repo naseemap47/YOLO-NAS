@@ -18,9 +18,12 @@ ap.add_argument("-b", "--batch", type=int, default=6,
                 help="Training batch size")
 ap.add_argument("-e", "--epoch", type=int, default=100,
                 help="Training number of epochs")
-ap.add_argument("-w", "--worker", type=int, default=2,
+ap.add_argument("-j", "--worker", type=int, default=2,
                 help="Training number of workers")
-
+ap.add_argument("-m", "--model", type=str, required=True,
+                help="Model type (eg: yolo_nas_s)")
+ap.add_argument("-w", "--weight", type=str, default='coco',
+                help="path to pre-trained model weight")
 
 args = vars(ap.parse_args())
 
@@ -79,11 +82,10 @@ test_data = coco_detection_yolo_format_val(
     }
 )
 
-
 model = models.get(
-    'yolo_nas_s', 
+    args['model'],
     num_classes=len(yaml_params['names']), 
-    pretrained_weights="coco"
+    pretrained_weights=args["weight"]
 )
 
 train_params = {
