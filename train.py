@@ -7,6 +7,7 @@ from super_gradients.training.models.detection_models.pp_yolo_e import PPYoloEPo
 import argparse
 import yaml
 import os
+import time
 
 
 ap = argparse.ArgumentParser()
@@ -26,6 +27,8 @@ ap.add_argument("-w", "--weight", type=str, default='coco',
                 help="path to pre-trained model weight")
 
 args = vars(ap.parse_args())
+
+s_time = time.time()
 
 if args['name'] is None:
     name = 'train'
@@ -156,3 +159,4 @@ if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
                                                                                                             max_predictions=300,                                                                              
                                                                                                             nms_threshold=0.7)
                                                     ))
+print(f'[INFO] Training Completed in {(time.time()-s_time)/3600} Hours')
