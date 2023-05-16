@@ -2,8 +2,12 @@ names:
 - Paper
 - Rock
 - Scissors
-nc: 3
-
-test: test/images
-train: train/images
-val: valid/images
+Dir: 'Data'
+images:
+  test: test/images
+  train: train/images
+  val: valid/images
+labels:
+  test: test/labels
+  train: train/labels
+  val: valid/labels
