@@ -70,18 +70,19 @@ val_data = coco_detection_yolo_format_val(
     }
 )
 
-test_data = coco_detection_yolo_format_val(
-    dataset_params={
-        'data_dir': yaml_params['Dir'],
-        'images_dir': yaml_params['images']['test'],
-        'labels_dir': yaml_params['labels']['test'],
-        'classes': yaml_params['names']
-    },
-    dataloader_params={
-        'batch_size':args['batch'],
-        'num_workers': args['worker']
-    }
-)
+if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
+    test_data = coco_detection_yolo_format_val(
+        dataset_params={
+            'data_dir': yaml_params['Dir'],
+            'images_dir': yaml_params['images']['test'],
+            'labels_dir': yaml_params['labels']['test'],
+            'classes': yaml_params['names']
+        },
+        dataloader_params={
+            'batch_size':args['batch'],
+            'num_workers': args['worker']
+        }
+    )
 
 model = models.get(
     args['model'],
@@ -140,18 +141,18 @@ trainer.train(
 
 
 # Evaluating on Test Dataset
-best_model = models.get(args['model'],
-                        num_classes=len(yaml_params['names']),
-                        checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
-trainer.test(model=best_model,
-            test_loader=test_data,
-            test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
-                                                   top_k_predictions=300, 
-                                                   num_cls=len(yaml_params['names']), 
-                                                   normalize_targets=True, 
-                                                   post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
-                                                                                                          nms_top_k=1000, 
-                                                                                                          max_predictions=300,                                                                              
-                                                                                                          nms_threshold=0.7)
-                                                  ))
-
+if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
+    best_model = models.get(args['model'],
+                            num_classes=len(yaml_params['names']),
+                            checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
+    trainer.test(model=best_model,
+                test_loader=test_data,
+                test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
+                                                    top_k_predictions=300, 
+                                                    num_cls=len(yaml_params['names']), 
+                                                    normalize_targets=True, 
+                                                    post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
+                                                                                                            nms_top_k=1000, 
+                                                                                                            max_predictions=300,                                                                              
+                                                                                                            nms_threshold=0.7)
+                                                    ))
