@@ -1,4 +1,5 @@
 from super_gradients.training import models
+from tqdm import tqdm
 import torch
 import cv2
 import random
@@ -22,6 +23,9 @@ ap.add_argument("-c", "--conf", type=float, default=0.25,
                 help="model prediction confidence (0<conf<1)")
 ap.add_argument("--save", action='store_true',
                 help="Save video")
+ap.add_argument("--hide", action='store_false',
+                help="to hide inference window")
+
 args = vars(ap.parse_args())
 yaml_params = yaml.safe_load(open(args['data'], 'r'))
 
@@ -55,8 +59,12 @@ if video_path.isnumeric():
     video_path = int(video_path)
 cap = cv2.VideoCapture(video_path)
 
+if args['hide'] is False:
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_count = 0
+
 # Get the width and height of the video - SAVE VIDEO.
-if args['save']:
+if args['save'] or args['hide'] is False:
     original_video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     original_video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -87,6 +95,10 @@ while True:
     class_names = preds.class_names
     dp = preds.prediction
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
+    if args['hide'] is False and len(labels)>0:
+        frame_count += 1
+        print(f'Frames Completed: {frame_count}/{length} Prediction: {[class_names[x] for x in labels]}')
+        
     for box, cnf, cs in zip(bboxes, confs, labels):
         plot_one_box(box[:4], img, label=f'{class_names[cs]} {cnf:.3}', color=colors[cs])
 
@@ -101,16 +113,19 @@ while True:
     )
 
     # Write Video
-    if args['save']:
+    if args['save'] or args['hide'] is False:
         out_vid.write(img)
 
-    k = cv2.waitKey(1)
-    cv2.imshow('img', img)
-    if k == ord('q'):
-        break
+    # Hide video
+    if args['hide']:
+        k = cv2.waitKey(1)
+        cv2.imshow('img', img)
+        if k == ord('q'):
+            break
 
 cap.release()
-if args['save']:
+if args['save'] or args['hide'] is False:
     out_vid.release()
     print(f"[INFO] Outout Video Saved in {path_save}")
-cv2.destroyAllWindows()
+if args['hide']:
+    cv2.destroyAllWindows()
