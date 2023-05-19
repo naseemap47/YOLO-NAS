@@ -126,15 +126,16 @@ You can Inference your **YOLO-NAS** model with **Single Command Line**
   `-w`, `--weight`: path to trained model weight <br>
   `-s`, `--source`: video path/cam-id/RTSP <br>
   `-c`, `--conf`: model prediction confidence (0<conf<1) <br>
-  `--save`: to save video
+  `--save`: to save video <br>
+  `--hide`: hide video window
 
 </details>
 
 **Example:**
 ```
 python3 inference.py --data /dir/dataset/data.yaml --model yolo_nas_m --weight /runs/train4/ckpt_best.pth --source /test/video.mp4 --conf 0.66           # video
-                                                                                                          --source /test/video.mp4 --conf 0.75 --save    # to save
+                                                                                                          --source /test/video.mp4 --conf 0.75 --hide    # to save and hide video window
                                                                                                           --source 0 --conf 0.45                         # Camera
-                                                                                                          --source 'rtsp://link' --conf 0.25             # RTSP
+                                                                                                          --source 'rtsp://link' --conf 0.25 --save      # save RTSP video stream
 
 ```
