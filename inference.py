@@ -1,5 +1,4 @@
 from super_gradients.training import models
-from tqdm import tqdm
 import torch
 import cv2
 import random
