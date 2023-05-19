@@ -35,7 +35,7 @@ cd YOLO-NAS
 ```
 ### Install dependencies
 ```
-pip3 install -r requirement.txt
+pip3 install -r requirements.txt
 ```
 ### 🎒 Prepare Dataset
 Your custom dataset should be in **COCO** data format.<br>
