@@ -125,6 +125,7 @@ python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yol
 ## 📺 Inference
 You can Inference your **YOLO-NAS** model with **Single Command Line**
 #### Support
+- Image
 - Video
 - Camera
 - RTSP
@@ -145,6 +146,7 @@ You can Inference your **YOLO-NAS** model with **Single Command Line**
 **Example:**
 ```
 python3 inference.py --data /dir/dataset/data.yaml --model yolo_nas_m --weight /runs/train4/ckpt_best.pth --source /test/video.mp4 --conf 0.66           # video
+                                                                                                          --source /test/sample.jpg --conf 0.5 --save    # Image save
                                                                                                           --source /test/video.mp4 --conf 0.75 --hide    # to save and hide video window
                                                                                                           --source 0 --conf 0.45                         # Camera
                                                                                                           --source 'rtsp://link' --conf 0.25 --save      # save RTSP video stream
