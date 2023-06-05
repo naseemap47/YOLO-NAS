@@ -42,6 +42,17 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
         cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 
+def get_bbox(img):
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    preds = next(model.predict(img_rgb, conf=args['conf'])._images_prediction_lst)
+    class_names = preds.class_names
+    dp = preds.prediction
+    bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
+    for box, cnf, cs in zip(bboxes, confs, labels):
+        plot_one_box(box[:4], img, label=f'{class_names[cs]} {cnf:.3}', color=colors[cs])
+    return labels, class_names
+
+
 # Load YOLO-NAS Model
 model = models.get(
     args['model'],
@@ -52,79 +63,97 @@ model = model.to("cuda" if torch.cuda.is_available() else "cpu")
 print('Class Names: ', yaml_params['names'])
 colors = [[random.randint(0, 255) for _ in range(3)] for _ in yaml_params['names']]
 
-# Reading Video/Cam/RTSP
-video_path = args['source']
-if video_path.isnumeric():
-    video_path = int(video_path)
-cap = cv2.VideoCapture(video_path)
-
-if args['hide'] is False:
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frame_count = 0
-
-# Get the width and height of the video - SAVE VIDEO.
-if args['save'] or args['hide'] is False:
-    original_video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    original_video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-
-    os.makedirs(os.path.join('runs', 'detect'), exist_ok=True)
-    if not str(video_path).isnumeric():
-        path_save = os.path.join('runs', 'detect', os.path.split(video_path)[1])
-    else:
-        c = 0
-        while True:
-            if not os.path.exists(os.path.join('runs', 'detect', f'cam{c}.mp4')):
-                path_save = os.path.join('runs', 'detect', f'cam{c}.mp4')
-                break
-            else:
-                c += 1
-    out_vid = cv2.VideoWriter(path_save, 
-                         cv2.VideoWriter_fourcc(*'mp4v'),
-                         fps, (original_video_width, original_video_height))
-
-p_time = 0
-while True:
-    success, img = cap.read()
-    if not success:
-        print('[INFO] Failed to read...')
-        break
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    preds = next(model.predict(img_rgb, conf=args['conf'])._images_prediction_lst)
-    class_names = preds.class_names
-    dp = preds.prediction
-    bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
+# Inference Image
+if args['source'].endswith('.jpg') or args['source'].endswith('.jpeg') or args['source'].endswith('.png'):
+    img = cv2.imread(args['source'])
+    labels, class_names = get_bbox(img)
     if args['hide'] is False and len(labels)>0:
-        frame_count += 1
-        print(f'Frames Completed: {frame_count}/{length} Prediction: {[class_names[x] for x in labels]}')
-        
-    for box, cnf, cs in zip(bboxes, confs, labels):
-        plot_one_box(box[:4], img, label=f'{class_names[cs]} {cnf:.3}', color=colors[cs])
+        pre_list = [class_names[x] for x in labels]
+        count_pred = {i:pre_list.count(i) for i in pre_list}
+        print(f'Prediction: {count_pred}')
 
-    # FPS
-    c_time = time.time()
-    fps = 1/(c_time-p_time)
-    p_time = c_time
-    cv2.putText(
-        img, f'FPS: {fps:.3}', (50, 60),
-        cv2.FONT_HERSHEY_PLAIN, 2, 
-        (0, 255, 0), 2
-    )
-
-    # Write Video
+    # save Image
     if args['save'] or args['hide'] is False:
-        out_vid.write(img)
-
+        os.makedirs(os.path.join('runs', 'detect'), exist_ok=True)
+        path_save = os.path.join('runs', 'detect', os.path.split(args['source'])[1])
+        cv2.imwrite(path_save, img)
+        print(f"[INFO] Saved Image: {path_save}")
+    
     # Hide video
     if args['hide']:
-        k = cv2.waitKey(1)
         cv2.imshow('img', img)
-        if k == ord('q'):
-            break
+        if cv2.waitKey(0) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+    
+# Reading Video/Cam/RTSP
+else:
+    video_path = args['source']
+    if video_path.isnumeric():
+        video_path = int(video_path)
+    cap = cv2.VideoCapture(video_path)
 
-cap.release()
-if args['save'] or args['hide'] is False:
-    out_vid.release()
-    print(f"[INFO] Outout Video Saved in {path_save}")
-if args['hide']:
-    cv2.destroyAllWindows()
+    if args['hide'] is False:
+        length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        frame_count = 0
+
+    # Get the width and height of the video - SAVE VIDEO.
+    if args['save'] or args['hide'] is False:
+        original_video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        original_video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        os.makedirs(os.path.join('runs', 'detect'), exist_ok=True)
+        if not str(video_path).isnumeric():
+            path_save = os.path.join('runs', 'detect', os.path.split(video_path)[1])
+        else:
+            c = 0
+            while True:
+                if not os.path.exists(os.path.join('runs', 'detect', f'cam{c}.mp4')):
+                    path_save = os.path.join('runs', 'detect', f'cam{c}.mp4')
+                    break
+                else:
+                    c += 1
+        out_vid = cv2.VideoWriter(path_save, 
+                            cv2.VideoWriter_fourcc(*'mp4v'),
+                            fps, (original_video_width, original_video_height))
+
+    p_time = 0
+    while True:
+        success, img = cap.read()
+        if not success:
+            print('[INFO] Failed to read...')
+            break
+        
+        labels, class_names = get_bbox(img)
+        if args['hide'] is False and len(labels)>0:
+            frame_count += 1
+            pre_list = [class_names[x] for x in labels]
+            count_pred = {i:pre_list.count(i) for i in pre_list}
+            print(f'Frames Completed: {frame_count}/{length} Prediction: {count_pred}')
+            
+        # FPS
+        c_time = time.time()
+        fps = 1/(c_time-p_time)
+        p_time = c_time
+        cv2.putText(
+            img, f'FPS: {fps:.3}', (50, 60),
+            cv2.FONT_HERSHEY_PLAIN, 2, 
+            (0, 255, 0), 2
+        )
+
+        # Write Video
+        if args['save'] or args['hide'] is False:
+            out_vid.write(img)
+
+        # Hide video
+        if args['hide']:
+            cv2.imshow('img', img)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    cap.release()
+    if args['save'] or args['hide'] is False:
+        out_vid.release()
+        print(f"[INFO] Outout Video Saved in {path_save}")
+    if args['hide']:
+        cv2.destroyAllWindows()
