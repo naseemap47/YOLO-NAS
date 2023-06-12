@@ -27,7 +27,24 @@ if __name__ == '__main__':
                     help="Model type (eg: yolo_nas_s)")
     ap.add_argument("-w", "--weight", type=str, default='coco',
                     help="path to pre-trained model weight")
-
+    
+    # train_params
+    ap.add_argument("--warmup_mode", type=float, default='linear_epoch_step',
+                    help="Warmup Mode")
+    ap.add_argument("--warmup_initial_lr", type=float, default=1e-6,
+                    help="Warmup Initial LR")
+    ap.add_argument("--lr_warmup_epochs", type=int, default=3,
+                    help="LR Warmup Epochs")
+    ap.add_argument("--initial_lr", type=float, default=5e-4,
+                    help="Inital LR")
+    ap.add_argument("--lr_mode", type=str, default='cosine',
+                    help="LR Mode")
+    ap.add_argument("--cosine_final_lr_ratio", type=float, default=0.1,
+                    help="Cosine Final LR Ratio")
+    ap.add_argument("--optimizer", type=str, default='Adam',
+                    help="Optimizer")
+    ap.add_argument("--weight_decay", type=float, default=0.0001,
+                    help="Weight Decay")
     args = vars(ap.parse_args())
 
     s_time = time.time()
@@ -99,23 +116,21 @@ if __name__ == '__main__':
         # ENABLING SILENT MODE
         'silent_mode': False,
         "average_best_models":True,
-        "warmup_mode": "linear_epoch_step",
-        "warmup_initial_lr": 1e-6,
-        "lr_warmup_epochs": 3,
-        "initial_lr": 5e-4,
-        "lr_mode": "cosine",
-        "cosine_final_lr_ratio": 0.1,
-        "optimizer": "Adam",
-        "optimizer_params": {"weight_decay": 0.0001},
+        "warmup_mode": args['warmup_mode'],
+        "warmup_initial_lr": args['warmup_initial_lr'],
+        "lr_warmup_epochs": args['lr_warmup_epochs'],
+        "initial_lr": args['initial_lr'],
+        "lr_mode": args['lr_mode'],
+        "cosine_final_lr_ratio": args['cosine_final_lr_ratio'],
+        "optimizer": args['optimizer'],
+        "optimizer_params": {"weight_decay": args['weight_decay']},
         "zero_weight_decay_on_bias_and_bn": True,
         "ema": True,
         "ema_params": {"decay": 0.9, "decay_type": "threshold"},
-        # ONLY TRAINING FOR 10 EPOCHS FOR THIS EXAMPLE NOTEBOOK
         "max_epochs": args['epoch'],
         "mixed_precision": True,
         "loss": PPYoloELoss(
             use_static_assigner=False,
-            # NOTE: num_classes needs to be defined here
             num_classes=len(yaml_params['names']),
             reg_max=16
         ),

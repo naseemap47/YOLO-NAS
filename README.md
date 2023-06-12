@@ -113,7 +113,17 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `-e`, `--epoch`: number of training epochs.<br>
   `-j`, `--worker`: Training number of workers <br>
   `-m`, `--model`: Model type (eg: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
-  `-w`, `--weight`: path to pre-trained model weight (default: `coco` weight)
+  `-w`, `--weight`: path to pre-trained model weight (default: `coco` weight) <br>
+  
+  **Other Training Parameters:**<br>
+  `--warmup_mode`: Warmup Mode, eg: Linear Epoch Step <br>
+  `--warmup_initial_lr`: Warmup Initial LR <br>
+  `--lr_warmup_epochs`: LR Warmup Epochs <br>
+  `--initial_lr`: Inital LR <br>
+  `--lr_mode`: LR Mode, eg: cosine <br>
+  `--cosine_final_lr_ratio`: Cosine Final LR Ratio <br>
+  `--optimizer`: Optimizer, eg: Adam <br>
+  `--weight_decay`: Weight Decay
   
 </details>
 
