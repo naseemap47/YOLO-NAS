@@ -29,7 +29,7 @@ if __name__ == '__main__':
                     help="path to pre-trained model weight")
     
     # train_params
-    ap.add_argument("--warmup_mode", type=float, default='linear_epoch_step',
+    ap.add_argument("--warmup_mode", type=str, default='linear_epoch_step',
                     help="Warmup Mode")
     ap.add_argument("--warmup_initial_lr", type=float, default=1e-6,
                     help="Warmup Initial LR")
