@@ -5,6 +5,7 @@ from super_gradients.training.losses import PPYoloELoss
 from super_gradients.training import Trainer
 from super_gradients.training import models
 import argparse
+import torch
 import time
 import yaml
 import os
@@ -29,6 +30,8 @@ if __name__ == '__main__':
                     help="path to pre-trained model weight")
     ap.add_argument("--gpus", action='store_true',
                 help="Run on all gpus")
+    ap.add_argument("--cpu", action='store_true',
+                help="Run on CPU")
     
     
     # train_params
@@ -66,7 +69,14 @@ if __name__ == '__main__':
         else:
             n += 1
 
-    trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', multi_gpu=args['gpus'])
+    # Training on GPU or CPU
+    if args['cpu']:
+        print('[INFO] Training on CPU')
+        trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', device='cpu')
+    else:
+        print(f'[INFO] Training on GPU: {torch.cuda.get_device_name()}')
+        trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', multi_gpu=args['gpus'])
+        
     yaml_params = yaml.safe_load(open(args['data'], 'r'))
 
     train_data = coco_detection_yolo_format_train(

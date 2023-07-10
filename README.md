@@ -115,6 +115,7 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `-m`, `--model`: Model type (eg: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
   `-w`, `--weight`: path to pre-trained model weight (default: `coco` weight) <br>
   `--gpus`: Train on multiple gpus <br>
+  `--cpu`: Train on CPU <br>
   
   **Other Training Parameters:**<br>
   `--warmup_mode`: Warmup Mode, eg: Linear Epoch Step <br>
