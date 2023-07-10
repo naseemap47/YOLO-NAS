@@ -27,6 +27,9 @@ if __name__ == '__main__':
                     help="Model type (eg: yolo_nas_s)")
     ap.add_argument("-w", "--weight", type=str, default='coco',
                     help="path to pre-trained model weight")
+    ap.add_argument("--gpus", action='store_true',
+                help="Run on all gpus")
+    
     
     # train_params
     ap.add_argument("--warmup_mode", type=str, default='linear_epoch_step',
@@ -63,7 +66,7 @@ if __name__ == '__main__':
         else:
             n += 1
 
-    trainer = Trainer(experiment_name=name, ckpt_root_dir='runs')
+    trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', multi_gpu=args['gpus'])
     yaml_params = yaml.safe_load(open(args['data'], 'r'))
 
     train_data = coco_detection_yolo_format_train(
