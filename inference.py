@@ -49,7 +49,7 @@ def get_bbox(img):
     dp = preds.prediction
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
     for box, cnf, cs in zip(bboxes, confs, labels):
-        plot_one_box(box[:4], img, label=f'{class_names[cs]} {cnf:.3}', color=colors[cs])
+        plot_one_box(box[:4], img, label=f'{class_names[int(cs)]} {cnf:.3}', color=colors[cs])
     return labels, class_names
 
 
