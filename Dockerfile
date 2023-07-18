@@ -10,5 +10,5 @@ RUN apt-get update && \
     git
 RUN git clone https://github.com/naseemap47/YOLO-NAS.git home
 WORKDIR /home
-RUN pip install super-gradients==3.1.1
+RUN pip install super-gradients
 RUN pip install triton==2.0.0
