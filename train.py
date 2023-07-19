@@ -193,13 +193,12 @@ if __name__ == '__main__':
                                                                                                                 max_predictions=300,                                                                              
                                                                                                                 nms_threshold=0.7)
                                                         ))
-    print('\033[1m Validating Model:\033[0m \n', eval_model)
+    print('\033[1m [INFO] Validating Model:\033[0m')
+    for i in eval_model:
+        print(f"{i}: {float(eval_model[i])}")
 
     # Evaluating on Test Dataset
     if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
-        best_model = models.get(args['model'],
-                                num_classes=len(yaml_params['names']),
-                                checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
         test_result = trainer.test(model=best_model,
                     test_loader=test_data,
                     test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
