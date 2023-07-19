@@ -181,7 +181,7 @@ if __name__ == '__main__':
         best_model = models.get(args['model'],
                                 num_classes=len(yaml_params['names']),
                                 checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
-        trainer.test(model=best_model,
+        test_result = trainer.test(model=best_model,
                     test_loader=test_data,
                     test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
                                                         top_k_predictions=300, 
@@ -192,4 +192,7 @@ if __name__ == '__main__':
                                                                                                                 max_predictions=300,                                                                              
                                                                                                                 nms_threshold=0.7)
                                                         ))
+        print('\033[1m [INFO] Test Results:\033[0m')
+        for i in test_result:
+            print(f"{i}: {float(test_result[i])}")
     print(f'[INFO] Training Completed in \033[1m{(time.time()-s_time)/3600} Hours\033[0m')
