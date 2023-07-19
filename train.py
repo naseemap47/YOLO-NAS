@@ -64,19 +64,22 @@ if __name__ == '__main__':
         if not os.path.exists(os.path.join('runs', f'{name}{n}')):
             name = f'{name}{n}'
             os.makedirs(os.path.join('runs', name))
-            print(f"[INFO] Checkpoints saved in {os.path.join('runs', name)}")
+            print(f"[INFO] Checkpoints saved in \033[1m{os.path.join('runs', name)}\033[0m")
             break
         else:
             n += 1
 
     # Training on GPU or CPU
     if args['cpu']:
-        print('[INFO] Training on CPU')
+        print('[INFO] Training on \033[1mCPU\033[0m')
         trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', device='cpu')
-    else:
-        print(f'[INFO] Training on GPU: {torch.cuda.get_device_name()}')
+    elif args['gpus']:
+        print(f'[INFO] Training on GPU: \033[1m{torch.cuda.get_device_name()}\033[0m')
         trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', multi_gpu=args['gpus'])
-        
+    else:
+        print(f'[INFO] Training on GPU: \033[1m{torch.cuda.get_device_name()}\033[0m')
+        trainer = Trainer(experiment_name=name, ckpt_root_dir='runs')
+
     yaml_params = yaml.safe_load(open(args['data'], 'r'))
 
     train_data = coco_detection_yolo_format_train(
@@ -189,4 +192,4 @@ if __name__ == '__main__':
                                                                                                                 max_predictions=300,                                                                              
                                                                                                                 nms_threshold=0.7)
                                                         ))
-    print(f'[INFO] Training Completed in {(time.time()-s_time)/3600} Hours')
+    print(f'[INFO] Training Completed in \033[1m{(time.time()-s_time)/3600} Hours\033[0m')
