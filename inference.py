@@ -25,9 +25,8 @@ ap.add_argument("--save", action='store_true',
                 help="Save video")
 ap.add_argument("--hide", action='store_false',
                 help="to hide inference window")
-
 args = vars(ap.parse_args())
-yaml_params = yaml.safe_load(open(args['data'], 'r'))
+
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=3):
     # Plots one bounding box on image img
@@ -46,7 +45,7 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
 def get_bbox(img):
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     preds = next(model.predict(img_rgb, conf=args['conf'])._images_prediction_lst)
-    class_names = preds.class_names
+    # class_names = preds.class_names
     dp = preds.prediction
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
     for box, cnf, cs in zip(bboxes, confs, labels):
@@ -61,8 +60,9 @@ model = models.get(
     checkpoint_path=args["weight"]
 )
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-print('Class Names: ', yaml_params['names'])
-colors = [[random.randint(0, 255) for _ in range(3)] for _ in yaml_params['names']]
+class_names = next(model.predict(np.zeros((1,1,3)), conf=args['conf'])._images_prediction_lst).class_names
+print('Class Names: ', class_names)
+colors = [[random.randint(0, 255) for _ in range(3)] for _ in class_names]
 
 # Inference Image
 if args['source'].endswith('.jpg') or args['source'].endswith('.jpeg') or args['source'].endswith('.png'):
