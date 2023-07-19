@@ -10,9 +10,10 @@ import os
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--data", type=str, required=True,
-                help="path to data.yaml")
-ap.add_argument("-m", "--model", type=str, required=True,
+ap.add_argument("-n", "--num", type=int, required=True,
+                help="number of classes the model trained on")
+ap.add_argument("-m", "--model", type=str, default='yolo_nas_s',
+                choices=['yolo_nas_s', 'yolo_nas_m', 'yolo_nas_l'],
                 help="Model type (eg: yolo_nas_s)")
 ap.add_argument("-w", "--weight", type=str, required=True,
                 help="path to trained model weight")
@@ -56,7 +57,7 @@ def get_bbox(img):
 # Load YOLO-NAS Model
 model = models.get(
     args['model'],
-    num_classes=len(yaml_params['names']), 
+    num_classes=args['num'], 
     checkpoint_path=args["weight"]
 )
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")

@@ -145,8 +145,8 @@ You can Inference your **YOLO-NAS** model with **Single Command Line**
 <details>
   <summary>Args</summary>
   
-  `-i`, `--data`: path to data.yaml <br>
-  `-m`, `--model`: Model type (eg: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
+  `-n`, `--num`: Number of classes the model trained on <br>
+  `-m`, `--model`: Model type (choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
   `-w`, `--weight`: path to trained model weight <br>
   `-s`, `--source`: video path/cam-id/RTSP <br>
   `-c`, `--conf`: model prediction confidence (0<conf<1) <br>
