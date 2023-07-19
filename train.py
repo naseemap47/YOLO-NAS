@@ -176,6 +176,24 @@ if __name__ == '__main__':
         valid_loader=val_data
     )
 
+    # Load best model
+    best_model = models.get(args['model'],
+                            num_classes=len(yaml_params['names']),
+                            checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
+    
+    # Evaluating on Val Dataset
+    eval_model = trainer.test(model=best_model,
+                    test_loader=val_data,
+                    test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
+                                                        top_k_predictions=300, 
+                                                        num_cls=len(yaml_params['names']), 
+                                                        normalize_targets=True, 
+                                                        post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
+                                                                                                                nms_top_k=1000, 
+                                                                                                                max_predictions=300,                                                                              
+                                                                                                                nms_threshold=0.7)
+                                                        ))
+    print('\033[1m Validating Model:\033[0m \n', eval_model)
 
     # Evaluating on Test Dataset
     if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
@@ -197,3 +215,4 @@ if __name__ == '__main__':
         for i in test_result:
             print(f"{i}: {float(test_result[i])}")
     print(f'[INFO] Training Completed in \033[1m{(time.time()-s_time)/3600} Hours\033[0m')
+    
