@@ -112,7 +112,7 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `-b`, `--batch`: Training batch size <br>
   `-e`, `--epoch`: number of training epochs.<br>
   `-j`, `--worker`: Training number of workers <br>
-  `-m`, `--model`: Model type (eg: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
+  `-m`, `--model`: Model type (Choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
   `-w`, `--weight`: path to pre-trained model weight (default: `coco` weight) <br>
   `--gpus`: Train on multiple gpus <br>
   `--cpu`: Train on CPU <br>
@@ -145,8 +145,8 @@ You can Inference your **YOLO-NAS** model with **Single Command Line**
 <details>
   <summary>Args</summary>
   
-  `-i`, `--data`: path to data.yaml <br>
-  `-m`, `--model`: Model type (eg: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
+  `-n`, `--num`: Number of classes the model trained on <br>
+  `-m`, `--model`: Model type (choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
   `-w`, `--weight`: path to trained model weight <br>
   `-s`, `--source`: video path/cam-id/RTSP <br>
   `-c`, `--conf`: model prediction confidence (0<conf<1) <br>
@@ -157,10 +157,10 @@ You can Inference your **YOLO-NAS** model with **Single Command Line**
 
 **Example:**
 ```
-python3 inference.py --data /dir/dataset/data.yaml --model yolo_nas_m --weight /runs/train4/ckpt_best.pth --source /test/video.mp4 --conf 0.66           # video
-                                                                                                          --source /test/sample.jpg --conf 0.5 --save    # Image save
-                                                                                                          --source /test/video.mp4 --conf 0.75 --hide    # to save and hide video window
-                                                                                                          --source 0 --conf 0.45                         # Camera
-                                                                                                          --source 'rtsp://link' --conf 0.25 --save      # save RTSP video stream
+python3 inference.py --num 3 --model yolo_nas_m --weight /runs/train4/ckpt_best.pth --source /test/video.mp4 --conf 0.66           # video
+                                                                                    --source /test/sample.jpg --conf 0.5 --save    # Image save
+                                                                                    --source /test/video.mp4 --conf 0.75 --hide    # to save and hide video window
+                                                                                    --source 0 --conf 0.45                         # Camera
+                                                                                    --source 'rtsp://link' --conf 0.25 --save      # save RTSP video stream
 
 ```

@@ -24,8 +24,9 @@ if __name__ == '__main__':
                     help="Training number of epochs")
     ap.add_argument("-j", "--worker", type=int, default=2,
                     help="Training number of workers")
-    ap.add_argument("-m", "--model", type=str, required=True,
-                    help="Model type (eg: yolo_nas_s)")
+    ap.add_argument("-m", "--model", type=str, default='yolo_nas_s',
+                choices=['yolo_nas_s', 'yolo_nas_m', 'yolo_nas_l'],
+                help="Model type (eg: yolo_nas_s)")
     ap.add_argument("-w", "--weight", type=str, default='coco',
                     help="path to pre-trained model weight")
     ap.add_argument("--gpus", action='store_true',
@@ -64,19 +65,22 @@ if __name__ == '__main__':
         if not os.path.exists(os.path.join('runs', f'{name}{n}')):
             name = f'{name}{n}'
             os.makedirs(os.path.join('runs', name))
-            print(f"[INFO] Checkpoints saved in {os.path.join('runs', name)}")
+            print(f"[INFO] Checkpoints saved in \033[1m{os.path.join('runs', name)}\033[0m")
             break
         else:
             n += 1
 
     # Training on GPU or CPU
     if args['cpu']:
-        print('[INFO] Training on CPU')
+        print('[INFO] Training on \033[1mCPU\033[0m')
         trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', device='cpu')
-    else:
-        print(f'[INFO] Training on GPU: {torch.cuda.get_device_name()}')
+    elif args['gpus']:
+        print(f'[INFO] Training on GPU: \033[1m{torch.cuda.get_device_name()}\033[0m')
         trainer = Trainer(experiment_name=name, ckpt_root_dir='runs', multi_gpu=args['gpus'])
-        
+    else:
+        print(f'[INFO] Training on GPU: \033[1m{torch.cuda.get_device_name()}\033[0m')
+        trainer = Trainer(experiment_name=name, ckpt_root_dir='runs')
+
     yaml_params = yaml.safe_load(open(args['data'], 'r'))
 
     train_data = coco_detection_yolo_format_train(
@@ -193,7 +197,10 @@ if __name__ == '__main__':
 
     # Evaluating on Test Dataset
     if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
-        test_model = trainer.test(model=best_model,
+        best_model = models.get(args['model'],
+                                num_classes=len(yaml_params['names']),
+                                checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
+        test_result = trainer.test(model=best_model,
                     test_loader=test_data,
                     test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
                                                         top_k_predictions=300, 
@@ -204,5 +211,8 @@ if __name__ == '__main__':
                                                                                                                 max_predictions=300,                                                                              
                                                                                                                 nms_threshold=0.7)
                                                         ))
-        print('\033[1m Model Test Results:\033[0m \n', test_model)
-    print(f'[INFO] Training Completed in \033[1m {(time.time()-s_time)/3600} Hours \033[0m')
+        print('\033[1m [INFO] Test Results:\033[0m')
+        for i in test_result:
+            print(f"{i}: {float(test_result[i])}")
+    print(f'[INFO] Training Completed in \033[1m{(time.time()-s_time)/3600} Hours\033[0m')
+    

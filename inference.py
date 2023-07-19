@@ -5,14 +5,14 @@ import random
 import numpy as np
 import time
 import argparse
-import yaml
 import os
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--data", type=str, required=True,
-                help="path to data.yaml")
-ap.add_argument("-m", "--model", type=str, required=True,
+ap.add_argument("-n", "--num", type=int, required=True,
+                help="number of classes the model trained on")
+ap.add_argument("-m", "--model", type=str, default='yolo_nas_s',
+                choices=['yolo_nas_s', 'yolo_nas_m', 'yolo_nas_l'],
                 help="Model type (eg: yolo_nas_s)")
 ap.add_argument("-w", "--weight", type=str, required=True,
                 help="path to trained model weight")
@@ -24,9 +24,8 @@ ap.add_argument("--save", action='store_true',
                 help="Save video")
 ap.add_argument("--hide", action='store_false',
                 help="to hide inference window")
-
 args = vars(ap.parse_args())
-yaml_params = yaml.safe_load(open(args['data'], 'r'))
+
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=3):
     # Plots one bounding box on image img
@@ -45,7 +44,7 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
 def get_bbox(img):
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     preds = next(model.predict(img_rgb, conf=args['conf'])._images_prediction_lst)
-    class_names = preds.class_names
+    # class_names = preds.class_names
     dp = preds.prediction
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
     for box, cnf, cs in zip(bboxes, confs, labels):
@@ -56,12 +55,13 @@ def get_bbox(img):
 # Load YOLO-NAS Model
 model = models.get(
     args['model'],
-    num_classes=len(yaml_params['names']), 
+    num_classes=args['num'], 
     checkpoint_path=args["weight"]
 )
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-print('Class Names: ', yaml_params['names'])
-colors = [[random.randint(0, 255) for _ in range(3)] for _ in yaml_params['names']]
+class_names = next(model.predict(np.zeros((1,1,3)), conf=args['conf'])._images_prediction_lst).class_names
+print('Class Names: ', class_names)
+colors = [[random.randint(0, 255) for _ in range(3)] for _ in class_names]
 
 # Inference Image
 if args['source'].endswith('.jpg') or args['source'].endswith('.jpeg') or args['source'].endswith('.png'):
