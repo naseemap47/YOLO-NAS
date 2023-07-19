@@ -112,7 +112,7 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `-b`, `--batch`: Training batch size <br>
   `-e`, `--epoch`: number of training epochs.<br>
   `-j`, `--worker`: Training number of workers <br>
-  `-m`, `--model`: Model type (eg: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
+  `-m`, `--model`: Model type (Choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
   `-w`, `--weight`: path to pre-trained model weight (default: `coco` weight) <br>
   `--gpus`: Train on multiple gpus <br>
   `--cpu`: Train on CPU <br>

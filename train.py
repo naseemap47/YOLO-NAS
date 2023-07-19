@@ -24,8 +24,9 @@ if __name__ == '__main__':
                     help="Training number of epochs")
     ap.add_argument("-j", "--worker", type=int, default=2,
                     help="Training number of workers")
-    ap.add_argument("-m", "--model", type=str, required=True,
-                    help="Model type (eg: yolo_nas_s)")
+    ap.add_argument("-m", "--model", type=str, default='yolo_nas_s',
+                choices=['yolo_nas_s', 'yolo_nas_m', 'yolo_nas_l'],
+                help="Model type (eg: yolo_nas_s)")
     ap.add_argument("-w", "--weight", type=str, default='coco',
                     help="path to pre-trained model weight")
     ap.add_argument("--gpus", action='store_true',
