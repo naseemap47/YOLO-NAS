@@ -9,5 +9,4 @@ RUN apt-get update && \
     libsm6 \
     libxext6
 WORKDIR /home
-RUN pip install triton==2.0.0
 RUN pip install super-gradients
