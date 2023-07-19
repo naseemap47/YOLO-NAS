@@ -42,7 +42,7 @@ conda create -n yolo-nas python=3.9 -y
 conda activate yolo-nas
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch -y
 pip install triton==2.0.0
-pip install super-gradients
+pip install super-gradients==3.1.1
 ```
 #### OR
 ```
