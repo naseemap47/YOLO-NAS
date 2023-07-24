@@ -87,6 +87,8 @@ if args['source'].endswith('.jpg') or args['source'].endswith('.jpeg') or args['
 
     # Hide video
     if args['hide']:
+        cv2.namedWindow("img", cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty('img', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow('img', img)
         if cv2.waitKey(0) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
@@ -125,6 +127,9 @@ else:
                             fps, (original_video_width, original_video_height))
 
     p_time = 0
+    if args['hide']:
+        cv2.namedWindow("img", cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty('img', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     while True:
         success, img = cap.read()
         if not success:
