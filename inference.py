@@ -63,27 +63,36 @@ class_names = next(model.predict(np.zeros((1,1,3)), conf=args['conf'])._images_p
 print('Class Names: ', class_names)
 colors = [[random.randint(0, 255) for _ in range(3)] for _ in class_names]
 
+# Global Timer
+global_timer = time.time()
+
 # Inference Image
 if args['source'].endswith('.jpg') or args['source'].endswith('.jpeg') or args['source'].endswith('.png'):
     img = cv2.imread(args['source'])
     labels, class_names = get_bbox(img)
+    # Timer
+    print(f'[INFO] Completed in \033[1m{(time.time()-global_timer)/60} Minute\033[0m')
+    
     if args['hide'] is False and len(labels)>0:
         pre_list = [class_names[x] for x in labels]
         count_pred = {i:pre_list.count(i) for i in pre_list}
         print(f'Prediction: {count_pred}')
-
+    
     # save Image
     if args['save'] or args['hide'] is False:
         os.makedirs(os.path.join('runs', 'detect'), exist_ok=True)
         path_save = os.path.join('runs', 'detect', os.path.split(args['source'])[1])
         cv2.imwrite(path_save, img)
-        print(f"[INFO] Saved Image: {path_save}")
-    
+        print(f"\033[1m[INFO] Saved Image: {path_save}\033[0m")
+
     # Hide video
     if args['hide']:
+        cv2.namedWindow("img", cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty('img', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow('img', img)
         if cv2.waitKey(0) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
+    
     
 # Reading Video/Cam/RTSP
 else:
@@ -118,6 +127,9 @@ else:
                             fps, (original_video_width, original_video_height))
 
     p_time = 0
+    if args['hide']:
+        cv2.namedWindow("img", cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty('img', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     while True:
         success, img = cap.read()
         if not success:
@@ -151,9 +163,11 @@ else:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
+    # Timer
+    print(f'[INFO] Completed in \033[1m{(time.time()-global_timer)/3600} Hours\033[0m')
     cap.release()
     if args['save'] or args['hide'] is False:
         out_vid.release()
-        print(f"[INFO] Outout Video Saved in {path_save}")
+        print(f"[INFO] Outout Video Saved in \033[1m{path_save}\033[0m")
     if args['hide']:
         cv2.destroyAllWindows()
