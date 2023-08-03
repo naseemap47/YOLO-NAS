@@ -22,16 +22,6 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
         cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 
-def get_bbox(img):
-    preds = model.predict(img, conf=args['conf'])._images_prediction_lst[0]
-    # class_names = preds.class_names
-    dp = preds.prediction
-    bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
-    for box, cnf, cs in zip(bboxes, confs, labels):
-        plot_one_box(box[:4], img, label=f'{class_names[int(cs)]} {cnf:.3}', color=colors[cs])
-    return labels, class_names
-
-
 # Load YOLO-NAS Model
 model = models.get(
     'yolo_nas_s',
