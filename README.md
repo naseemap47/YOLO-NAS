@@ -163,3 +163,9 @@ python3 inference.py --num 3 --model yolo_nas_m --weight /runs/train4/ckpt_best.
                                                                                     --source 'rtsp://link' --conf 0.25 --save      # save RTSP video stream
 
 ```
+## 📺 Inference Batching
+### Upcomming...
+**Example:**
+```
+python3 batch.py
+```
