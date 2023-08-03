@@ -42,7 +42,8 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
 
 
 def get_bbox(img):
-    preds = model.predict(img, conf=args['conf'])._images_prediction_lst[0]
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    preds = model.predict(img_rgb, conf=args['conf'])._images_prediction_lst[0]
     # class_names = preds.class_names
     dp = preds.prediction
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
@@ -68,8 +69,7 @@ global_timer = time.time()
 # Inference Image
 if args['source'].endswith('.jpg') or args['source'].endswith('.jpeg') or args['source'].endswith('.png'):
     img = cv2.imread(args['source'])
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    labels, class_names = get_bbox(img_rgb)
+    labels, class_names = get_bbox(img)
     # Timer
     print(f'[INFO] Completed in \033[1m{(time.time()-global_timer)/60} Minute\033[0m')
     
