@@ -164,8 +164,24 @@ python3 inference.py --num 3 --model yolo_nas_m --weight /runs/train4/ckpt_best.
 
 ```
 ## 📺 Inference Batching
-### Upcomming...
-**Example:**
+#### Support
+- Video
+- Camera
+- RTSP
+
+<details>
+  <summary>Args</summary>
+  
+  `-n`, `--num`: Number of classes the model trained on <br>
+  `-m`, `--model`: Model type (choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
+  `-w`, `--weight`: path to trained model weight <br>
+  `-s`, `--source`: paths to videos/cam-ids/RTSPs <br>
+  `--full`: to enable full screen
+
+</details>
+
 ```
-python3 batch.py
+python3 batch.py --num 3 --model yolo_nas_m --weight /runs/train4/ckpt_best.pth --source '/test/video.mp4' '/test/video23.mp4'      # videos
+                                                                                --source 0 2 --conf 0.45 --full                     # web-Cameras with full screen
+                                                                                --source 'rtsp://link' 'rtsp://link3' --conf 0.25   # RTSPs video stream
 ```
