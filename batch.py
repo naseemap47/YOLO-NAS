@@ -3,9 +3,24 @@ import torch
 import cv2
 import random
 import numpy as np
-import time
 import argparse
-import os
+
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-n", "--num", type=int, required=True,
+                help="number of classes the model trained on")
+ap.add_argument("-m", "--model", type=str, default='yolo_nas_s',
+                choices=['yolo_nas_s', 'yolo_nas_m', 'yolo_nas_l'],
+                help="Model type (eg: yolo_nas_s)")
+ap.add_argument("-w", "--weight", type=str, required=True,
+                help="path to trained model weight")
+ap.add_argument("-s", "--source", nargs='+', default=[],
+                help="paths to videos/cam-ids/RTSPs")
+ap.add_argument("-c", "--conf", type=float, default=0.25,
+                help="model prediction confidence (0<conf<1)")
+ap.add_argument("--full", action='store_true',
+                help="Enable full screen window")
+args = vars(ap.parse_args())
 
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=3):
@@ -24,40 +39,50 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
 
 # Load YOLO-NAS Model
 model = models.get(
-    'yolo_nas_s',
-    pretrained_weights='coco'
+    args['model'],
+    num_classes=args['num'], 
+    checkpoint_path=args["weight"]
 )
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-class_names = model.predict(np.zeros((1,1,3)), conf=0.25)._images_prediction_lst[0].class_names
+class_names = model.predict(np.zeros((1,1,3)), conf=args['conf'])._images_prediction_lst[0].class_names
 print('Class Names: ', class_names)
 colors = [[random.randint(0, 255) for _ in range(3)] for _ in class_names]
 
-cap1 = cv2.VideoCapture('https://csea-me-webcam.cse.umn.edu/mjpg/video.mjpg?timestamp=1443034719346')
-cap2 = cv2.VideoCapture('http://view.dikemes.edu.gr/mjpg/video.mjpg')
+# video cap for all sources
+cap_list = []
+for i in args['source']:
+    if i.isnumeric():
+        i = int(i)
+    cap_temp = cv2.VideoCapture(i)
+    cap_list.append(cap_temp)
+
+if args['full']:
+    for i in range(len(args['source'])):
+        cv2.namedWindow(f'img{i}', cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty(f'img{i}', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 while True:
-    success1, img1 = cap1.read()
-    if not success1:
-        print('[INFO] Failed to read1...')
-        break
-    success2, img2 = cap2.read()
-    if not success2:
-        print('[INFO] Failed to read2...')
-        break
-
-    img = [img1, img2]
-    img_rgb1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-    img_rgb2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
-    preds = model.predict([img_rgb1, img_rgb2], conf=0.25)._images_prediction_lst
+    img_input_list = []
+    img_list = []
+    for id, cap in enumerate(cap_list):
+        success, img = cap.read()
+        if not success:
+            print(f'[INFO] Failed to read {id}...')
+            break
+        else:
+            img_list.append(img)
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img_input_list.append(img_rgb)
+    
+    preds = model.predict(img_input_list, conf=args['conf'])._images_prediction_lst
     for id, pred in enumerate(preds):
         # class_names = preds.class_names
         dp = pred.prediction
         bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
         for box, cnf, cs in zip(bboxes, confs, labels):
-            plot_one_box(box[:4], img[id], label=f'{class_names[int(cs)]} {cnf:.3}', color=colors[cs])
+            plot_one_box(box[:4], img_list[id], label=f'{class_names[int(cs)]} {cnf:.3}', color=colors[cs])
 
-    cv2.imshow('img1', img1)
-    cv2.imshow('img2', img2)
-    
+    for i in range(len(img_list)):
+        cv2.imshow(f'img{i}', img_list[i])
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
