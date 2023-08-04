@@ -43,7 +43,7 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3):
 
 def get_bbox(img):
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    preds = next(model.predict(img_rgb, conf=args['conf'])._images_prediction_lst)
+    preds = model.predict(img_rgb, conf=args['conf'])._images_prediction_lst[0]
     # class_names = preds.class_names
     dp = preds.prediction
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
@@ -59,7 +59,7 @@ model = models.get(
     checkpoint_path=args["weight"]
 )
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-class_names = next(model.predict(np.zeros((1,1,3)), conf=args['conf'])._images_prediction_lst).class_names
+class_names = model.predict(np.zeros((1,1,3)), conf=args['conf'])._images_prediction_lst[0].class_names
 print('Class Names: ', class_names)
 colors = [[random.randint(0, 255) for _ in range(3)] for _ in class_names]
 

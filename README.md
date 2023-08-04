@@ -41,8 +41,7 @@ cd YOLO-NAS
 conda create -n yolo-nas python=3.9 -y
 conda activate yolo-nas
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch -y
-pip install triton==2.0.0
-pip install super-gradients==3.1.1
+pip install super-gradients==3.1.3
 ```
 #### OR
 ```
@@ -163,4 +162,10 @@ python3 inference.py --num 3 --model yolo_nas_m --weight /runs/train4/ckpt_best.
                                                                                     --source 0 --conf 0.45                         # Camera
                                                                                     --source 'rtsp://link' --conf 0.25 --save      # save RTSP video stream
 
+```
+## 📺 Inference Batching
+### Upcomming...
+**Example:**
+```
+python3 batch.py
 ```
