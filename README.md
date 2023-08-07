@@ -110,6 +110,7 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `-n`, `--name`: Checkpoint dir name <br>
   `-b`, `--batch`: Training batch size <br>
   `-e`, `--epoch`: number of training epochs.<br>
+  `-s`, `--size`: Input image size <br>
   `-j`, `--worker`: Training number of workers <br>
   `-m`, `--model`: Model type (Choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
   `-w`, `--weight`: path to pre-trained model weight (default: `coco` weight) <br>
@@ -130,7 +131,7 @@ You can train your **YOLO-NAS** model with **Single Command Line**
 
 **Example:**
 ```
-python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m
+python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m --size 640
 ```
 
 ## 📺 Inference
