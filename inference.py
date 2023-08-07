@@ -49,7 +49,7 @@ def get_bbox(img):
     bboxes, confs, labels = np.array(dp.bboxes_xyxy), dp.confidence, dp.labels.astype(int)
     for box, cnf, cs in zip(bboxes, confs, labels):
         plot_one_box(box[:4], img, label=f'{class_names[int(cs)]} {cnf:.3}', color=colors[cs])
-    return labels, class_names
+    return labels
 
 
 # Load YOLO-NAS Model
@@ -69,12 +69,12 @@ global_timer = time.time()
 # Inference Image
 if args['source'].endswith('.jpg') or args['source'].endswith('.jpeg') or args['source'].endswith('.png'):
     img = cv2.imread(args['source'])
-    labels, class_names = get_bbox(img)
+    labels = get_bbox(img)
     # Timer
     print(f'[INFO] Completed in \033[1m{(time.time()-global_timer)/60} Minute\033[0m')
     
     if args['hide'] is False and len(labels)>0:
-        pre_list = [class_names[x] for x in labels]
+        pre_list = [class_names[int(x)] for x in labels]
         count_pred = {i:pre_list.count(i) for i in pre_list}
         print(f'Prediction: {count_pred}')
     
@@ -136,10 +136,10 @@ else:
             print('[INFO] Failed to read...')
             break
         
-        labels, class_names = get_bbox(img)
+        labels = get_bbox(img)
         if args['hide'] is False and len(labels)>0:
             frame_count += 1
-            pre_list = [class_names[x] for x in labels]
+            pre_list = [class_names[int(x)] for x in labels]
             count_pred = {i:pre_list.count(i) for i in pre_list}
             print(f'Frames Completed: {frame_count}/{length} Prediction: {count_pred}')
             
