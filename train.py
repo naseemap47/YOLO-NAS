@@ -29,6 +29,8 @@ if __name__ == '__main__':
                 help="Model type (eg: yolo_nas_s)")
     ap.add_argument("-w", "--weight", type=str, default='coco',
                     help="path to pre-trained model weight")
+    ap.add_argument("-s", "--size", type=int, default=640,
+                    help="input image size")
     ap.add_argument("--gpus", action='store_true',
                 help="Run on all gpus")
     ap.add_argument("--cpu", action='store_true',
@@ -88,7 +90,8 @@ if __name__ == '__main__':
             'data_dir': yaml_params['Dir'],
             'images_dir': yaml_params['images']['train'],
             'labels_dir': yaml_params['labels']['train'],
-            'classes': yaml_params['names']
+            'classes': yaml_params['names'],
+            'input_dim': (args['size'], args['size'])
         },
         dataloader_params={
             'batch_size': args['batch'],
@@ -101,7 +104,8 @@ if __name__ == '__main__':
             'data_dir': yaml_params['Dir'],
             'images_dir': yaml_params['images']['val'],
             'labels_dir': yaml_params['labels']['val'],
-            'classes': yaml_params['names']
+            'classes': yaml_params['names'],
+            'input_dim': (args['size'], args['size'])
         },
         dataloader_params={
             'batch_size':args['batch'],
@@ -115,7 +119,8 @@ if __name__ == '__main__':
                 'data_dir': yaml_params['Dir'],
                 'images_dir': yaml_params['images']['test'],
                 'labels_dir': yaml_params['labels']['test'],
-                'classes': yaml_params['names']
+                'classes': yaml_params['names'],
+                'input_dim': (args['size'], args['size'])
             },
             dataloader_params={
                 'batch_size':args['batch'],
