@@ -131,7 +131,7 @@ if __name__ == '__main__':
     if not args["weight"]:
         weights = None
     else:
-        weights = args["weights"]
+        weights = args["weight"]
 
     model = models.get(
         args['model'],
