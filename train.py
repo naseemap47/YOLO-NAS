@@ -128,10 +128,15 @@ if __name__ == '__main__':
             }
         )
 
+    if not args["weight"]:
+        weights = None
+    else:
+        weights = args["weights"]
+
     model = models.get(
         args['model'],
         num_classes=len(yaml_params['names']), 
-        pretrained_weights=args["weight"]
+        pretrained_weights=weights
     )
 
     train_params = {
