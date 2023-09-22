@@ -29,6 +29,8 @@ if __name__ == '__main__':
                 help="Model type (eg: yolo_nas_s)")
     ap.add_argument("-w", "--weight", type=str, default='coco',
                     help="path to pre-trained model weight")
+    ap.add_argument("-r", "--resume", action='store_true',
+                    help="to resume model training")
     ap.add_argument("-s", "--size", type=int, default=640,
                     help="input image size")
     ap.add_argument("--gpus", action='store_true',
@@ -128,11 +130,19 @@ if __name__ == '__main__':
             }
         )
 
-    model = models.get(
-        args['model'],
-        num_classes=len(yaml_params['names']), 
-        pretrained_weights=args["weight"]
-    )
+    # To Resume Training
+    if args['resume']:
+        model = models.get(
+            args['model'],
+            num_classes=len(yaml_params['names']),
+            checkpoint_path=args["weight"]
+        )
+    else:
+        model = models.get(
+            args['model'],
+            num_classes=len(yaml_params['names']), 
+            pretrained_weights=args["weight"]
+        )
 
     train_params = {
         # ENABLING SILENT MODE
