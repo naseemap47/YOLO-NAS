@@ -60,20 +60,25 @@ if __name__ == '__main__':
 
     s_time = time.time()
 
+    
     if args['name'] is None:
         name = 'train'
     else:
         name = args['name']
-    n = 0
-    while True:
-        if not os.path.exists(os.path.join('runs', f'{name}{n}')):
-            name = f'{name}{n}'
-            os.makedirs(os.path.join('runs', name))
-            print(f"[INFO] Checkpoints saved in \033[1m{os.path.join('runs', name)}\033[0m")
-            break
-        else:
-            n += 1
-
+    
+    if args['resume']:
+        name = os.path.split(args['weight'])[0].split('/')[-1]
+    else:
+        n = 0
+        while True:
+            if not os.path.exists(os.path.join('runs', f'{name}{n}')):
+                name = f'{name}{n}'
+                os.makedirs(os.path.join('runs', name))
+                break
+            else:
+                n += 1
+                
+    print(f"[INFO] Checkpoints saved in \033[1m{os.path.join('runs', name)}\033[0m")
     # Training on GPU or CPU
     if args['cpu']:
         print('[INFO] Training on \033[1mCPU\033[0m')
@@ -188,6 +193,9 @@ if __name__ == '__main__':
     if args['resume']:
         train_params['resume'] = True
     
+    # Print Training Params
+    print('[INFO] Training Params:\n', train_params)
+
     trainer.train(
         model=model, 
         training_params=train_params, 
