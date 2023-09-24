@@ -184,6 +184,10 @@ if __name__ == '__main__':
         "metric_to_watch": 'mAP@0.50'
     }
 
+    # to Resume Training
+    if args['resume']:
+        train_params['resume'] = True
+    
     trainer.train(
         model=model, 
         training_params=train_params, 
