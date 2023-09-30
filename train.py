@@ -58,15 +58,15 @@ if __name__ == '__main__':
                     help="LR Mode")
     ap.add_argument("--cosine_final_lr_ratio", type=float, default=0.1,
                     help="Cosine Final LR Ratio")
-    ap.add_argument("--optimizer", type=str, default='Adam',
+    ap.add_argument("--optimizer", type=str, default='AdamW',
                     help="Optimizer")
     ap.add_argument("--weight_decay", type=float, default=0.0001,
                     help="Weight Decay")
     args = vars(ap.parse_args())
 
+    # Start Time
     s_time = time.time()
 
-    
     if args['name'] is None:
         name = 'train'
     else:
@@ -140,7 +140,7 @@ if __name__ == '__main__':
                                     ])
     valid_loader = dataloaders.get(dataset=valset, dataloader_params={
                                     "shuffle": False,
-                                    "batch_size": args['batch'],
+                                    "batch_size": int(args['batch']*2),
                                     "num_workers": args['worker'],
                                     "drop_last": False,
                                     "pin_memory": True,
@@ -161,9 +161,9 @@ if __name__ == '__main__':
                                         DetectionTargetsFormatTransform(max_targets=300, input_dim=(args['size'], args['size']),
                                                                         output_format="LABEL_CXCYWH")
                                     ])
-        test_loader = dataloaders.get(dataset=valset, dataloader_params={
+        test_loader = dataloaders.get(dataset=testset, dataloader_params={
                                         "shuffle": False,
-                                        "batch_size": args['batch'],
+                                        "batch_size": int(args['batch']*2),
                                         "num_workers": args['worker'],
                                         "drop_last": False,
                                         "pin_memory": True,
