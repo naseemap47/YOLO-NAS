@@ -48,37 +48,26 @@ pip install super-gradients==3.1.3
 pip3 install -r requirements.txt
 ```
 ### 🎒 Prepare Dataset
-Your custom dataset should be in **COCO** data format.<br>
+Your custom dataset should be in **COCO JSON** data format.<br>
 **COCO Data Format**:
 ```
 ├── Dataset
+|   ├── annotations
+│   │   ├── train.json
+│   │   ├── valid.json
+│   │   ├── test.json
 │   ├── train
-│   │   ├── images
-│   │   │   ├── 1.jpg
-│   │   │   ├── abc.png
-|   |   |   ├── ....
-│   │   ├── labels
-│   │   │   ├── 1.txt
-│   │   │   ├── abc.txt
-|   |   |   ├── ....
+│   │   ├── 1.jpg
+│   │   ├── abc.png
+|   |   ├── ....
 │   ├── val
-│   │   ├── images
-│   │   │   ├── 2.jpg
-│   │   │   ├── fram.png
-|   |   |   ├── ....
-│   │   ├── labels
-│   │   │   ├── 2.txt
-│   │   │   ├── fram.txt
-|   |   |   ├── ....
+│   │   ├── 2.jpg
+│   │   ├── fram.png
+|   |   ├── ....
 │   ├── test
-│   │   ├── images
-│   │   │   ├── img23.jpeg
-│   │   │   ├── 50.jpg
-|   |   |   ├── ....
-│   │   ├── labels
-│   │   │   ├── img23.txt
-│   │   │   ├── 50.txt
-|   |   |   ├── ....
+│   │   ├── img23.jpeg
+│   │   ├── 50.jpg
+|   |   ├── ....
 ```
 
 To training custom model using your custom data.
@@ -86,18 +75,18 @@ You need to create [data.yaml](https://github.com/naseemap47/YOLO-NAS/blob/maste
 Example:
 ```
 names:
-- class1
-- class2
-- class3
-Dir: '/home/user/my_data'  # path to your custom data
+- Paper
+- Rock
+- Scissors
+Dir: 'Data'   # path to your custom data
 images:
-  test: test/images
-  train: train/images
-  val: valid/images
+  test: test
+  train: train
+  val: valid
 labels:
-  test: test/labels
-  train: train/labels
-  val: valid/labels
+  test: annotations/test.json
+  train: annotations/train.json
+  val: annotations/valid.json
 ```
 
 ## 🤖 Train
