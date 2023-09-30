@@ -3,7 +3,7 @@ from super_gradients.training.datasets.detection_datasets.coco_format_detection 
 from super_gradients.training.transforms.transforms import DetectionMosaic, DetectionRandomAffine, DetectionHSV, \
     DetectionHorizontalFlip, DetectionPaddedRescale, DetectionStandardize, DetectionTargetsFormatTransform
 from super_gradients.training.datasets.datasets_utils import worker_init_reset_seed
-from super_gradients.training.utils.detection_utils import DetectionCollateFN
+from super_gradients.training.utils.detection_utils import CrowdDetectionCollateFN
 from super_gradients.training.metrics import DetectionMetrics_050
 from super_gradients.training.losses import PPYoloELoss
 from super_gradients.training import dataloaders
@@ -122,7 +122,7 @@ if __name__ == '__main__':
                                     "batch_size": args['batch'],
                                     "drop_last": False,
                                     "pin_memory": True,
-                                    "collate_fn": DetectionCollateFN(),
+                                    "collate_fn": CrowdDetectionCollateFN(),
                                     "worker_init_fn": worker_init_reset_seed,
                                     "min_samples": 512
                                 })
@@ -144,7 +144,7 @@ if __name__ == '__main__':
                                     "num_workers": args['worker'],
                                     "drop_last": False,
                                     "pin_memory": True,
-                                    "collate_fn": DetectionCollateFN(),
+                                    "collate_fn": CrowdDetectionCollateFN(),
                                     "worker_init_fn": worker_init_reset_seed
                                 })
 
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                                         "num_workers": args['worker'],
                                         "drop_last": False,
                                         "pin_memory": True,
-                                        "collate_fn": DetectionCollateFN(),
+                                        "collate_fn": CrowdDetectionCollateFN(),
                                         "worker_init_fn": worker_init_reset_seed
                                     })
 
