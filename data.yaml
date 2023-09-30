@@ -4,10 +4,10 @@ names:
 - Scissors
 Dir: 'Data'
 images:
-  test: test/images
-  train: train/images
-  val: valid/images
+  test: test
+  train: train
+  val: valid
 labels:
-  test: test/labels
-  train: train/labels
-  val: valid/labels
+  test: annotations/test.json
+  train: annotations/train.json
+  val: annotations/valid.json
