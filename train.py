@@ -4,6 +4,7 @@ from super_gradients.training.transforms.transforms import DetectionMosaic, Dete
     DetectionHorizontalFlip, DetectionPaddedRescale, DetectionStandardize, DetectionTargetsFormatTransform
 from super_gradients.training.datasets.datasets_utils import worker_init_reset_seed
 from super_gradients.training.utils.detection_utils import CrowdDetectionCollateFN
+from super_gradients.training.pre_launch_callbacks import modify_params_for_qat
 from super_gradients.training.metrics import DetectionMetrics_050
 from super_gradients.training.losses import PPYoloELoss
 from super_gradients.training import dataloaders
@@ -44,6 +45,8 @@ if __name__ == '__main__':
                 help="Run on all gpus")
     ap.add_argument("--cpu", action='store_true',
                 help="Run on CPU")
+    ap.add_argument("--qat", action='store_true',
+                help="Quantization Aware Training")
     
     
     # train_params
@@ -105,7 +108,7 @@ if __name__ == '__main__':
     print(f"\033[1m[INFO] Number of Classes: {no_class}\033[0m")
     
     # Reain Dataset
-    trainset = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
+    train_dataset_params = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
                                       images_dir=yaml_params['images']['train'],
                                       json_annotation_file=yaml_params['labels']['train'],
                                       input_dim=(args['size'], args['size']),
@@ -122,17 +125,17 @@ if __name__ == '__main__':
                                           DetectionTargetsFormatTransform(max_targets=300, input_dim=(args['size'], args['size']),
                                                                           output_format="LABEL_CXCYWH")
                                       ])
-    train_loader = dataloaders.get(dataset=trainset, dataloader_params={
-                                    "shuffle": True,
-                                    "batch_size": args['batch'],
-                                    "drop_last": False,
-                                    "pin_memory": True,
-                                    "collate_fn": CrowdDetectionCollateFN(),
-                                    "worker_init_fn": worker_init_reset_seed,
-                                    "min_samples": 512
-                                })
+    train_dataloader_params = {
+                                "shuffle": True,
+                                "batch_size": args['batch'],
+                                "drop_last": False,
+                                "pin_memory": True,
+                                "collate_fn": CrowdDetectionCollateFN(),
+                                "worker_init_fn": worker_init_reset_seed,
+                                "min_samples": 512
+                                }
     # Valid Data
-    valset = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
+    val_dataset_params = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
                                     images_dir=yaml_params['images']['val'],
                                     json_annotation_file=yaml_params['labels']['val'],
                                     input_dim=(args['size'], args['size']),
@@ -143,15 +146,15 @@ if __name__ == '__main__':
                                         DetectionTargetsFormatTransform(max_targets=300, input_dim=(args['size'], args['size']),
                                                                         output_format="LABEL_CXCYWH")
                                     ])
-    valid_loader = dataloaders.get(dataset=valset, dataloader_params={
-                                    "shuffle": False,
-                                    "batch_size": int(args['batch']*2),
-                                    "num_workers": args['worker'],
-                                    "drop_last": False,
-                                    "pin_memory": True,
-                                    "collate_fn": CrowdDetectionCollateFN(),
-                                    "worker_init_fn": worker_init_reset_seed
-                                })
+    val_dataloader_params = {
+                            "shuffle": False,
+                            "batch_size": int(args['batch']*2),
+                            "num_workers": args['worker'],
+                            "drop_last": False,
+                            "pin_memory": True,
+                            "collate_fn": CrowdDetectionCollateFN(),
+                            "worker_init_fn": worker_init_reset_seed
+                            }
 
     # Test Data
     if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
@@ -231,17 +234,39 @@ if __name__ == '__main__':
     # to Resume Training
     if args['resume']:
         train_params['resume'] = True
-    
+
+    # Quantization Aware Training
+    if args['qat']:
+        train_params, train_dataset_params, val_dataset_params, train_dataloader_params, val_dataloader_params = modify_params_for_qat(
+            train_params, train_dataset_params, val_dataset_params, train_dataloader_params, val_dataloader_params
+        )
     # Print Training Params
     print('[INFO] Training Params:\n', train_params)
 
-    # Model Training...
-    trainer.train(
-        model=model, 
-        training_params=train_params, 
-        train_loader=train_loader, 
-        valid_loader=valid_loader
-    )
+    trainset = COCOFormatDetectionDataset(**train_dataset_params)
+    valset = COCOFormatDetectionDataset(**val_dataset_params)
+    train_loader = dataloaders.get(dataset=trainset,
+                                dataloader_params=train_dataloader_params)
+    valid_loader = dataloaders.get(dataset=valset,
+                                dataloader_params=val_dataloader_params)
+                                
+    # Quantization Aware Training
+    if args['qat']:
+        trainer.qat(
+            model=model, 
+            training_params=train_params, 
+            train_loader=train_loader, 
+            valid_loader=valid_loader, 
+            calib_loader=train_loader
+        )
+    else:
+        # Model Training...
+        trainer.train(
+            model=model, 
+            training_params=train_params, 
+            train_loader=train_loader, 
+            valid_loader=valid_loader
+        )
 
     # Load best model
     best_model = models.get(args['model'],
