@@ -51,6 +51,8 @@ pip3 install -r requirements.txt
 ```
 ### 🎒 Prepare Dataset
 Your custom dataset should be in **COCO JSON** data format.<br>
+To convert **YOLO (.txt) / PASCAL VOC (.XML)** format to **COCO JSON**.<br>
+Using JSON Converter https://github.com/naseemap47/autoAnnoter#10-yolo_to_jsonpy <br>
 **COCO Data Format**:
 ```
 ├── Dataset
