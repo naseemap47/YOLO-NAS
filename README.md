@@ -76,11 +76,7 @@ To training custom model using your custom data.
 You need to create [data.yaml](https://github.com/naseemap47/YOLO-NAS/blob/master/data.yaml)
 Example:
 ```
-names:
-- Paper
-- Rock
-- Scissors
-Dir: 'Data'   # path to your custom data
+Dir: 'Data'
 images:
   test: test
   train: train
