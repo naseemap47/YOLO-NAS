@@ -106,6 +106,8 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `--gpus`: Train on multiple gpus <br>
   `--cpu`: Train on CPU <br>
   `--resume`: To resume model training <br>
+  **Quantization Aware Training** <br>
+  `--qat`: Quantization Aware Training <br>
   
   **Other Training Parameters:**<br>
   `--warmup_mode`: Warmup Mode, eg: Linear Epoch Step <br>
