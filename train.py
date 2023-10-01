@@ -68,6 +68,11 @@ if __name__ == '__main__':
                     help="Weight Decay")
     args = vars(ap.parse_args())
 
+    # Quantization Aware Training INFO
+    if args['qat']:
+        print("\x1b[6;37;41m [INFO] Quantization Aware Training \x1b[0m")
+        print("\x1b[1;37;41m [WARNING]: Quantization Aware Training Requires a Large Amount of System RAM \x1b[0m")
+
     # Start Time
     s_time = time.time()
 
