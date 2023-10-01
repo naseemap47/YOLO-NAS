@@ -1,7 +1,3 @@
-names:
-- Paper
-- Rock
-- Scissors
 Dir: 'Data'
 images:
   test: test
