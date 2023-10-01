@@ -42,7 +42,7 @@ conda create -n yolo-nas python=3.9 -y
 conda activate yolo-nas
 pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
 pip install pytorch-quantization==2.1.2 --extra-index-url https://pypi.ngc.nvidia.com
-pip install super-gradients --upgrade
+pip install super-gradients==3.1.3
 pip install urllib3==1.25.9
 ```
 #### OR
