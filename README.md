@@ -40,64 +40,53 @@ cd YOLO-NAS
 ```
 conda create -n yolo-nas python=3.9 -y
 conda activate yolo-nas
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch -y
+pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
+pip install pytorch-quantization==2.1.2 --extra-index-url https://pypi.ngc.nvidia.com
 pip install super-gradients==3.1.3
+pip install urllib3==1.25.9
 ```
 #### OR
 ```
 pip3 install -r requirements.txt
 ```
 ### 🎒 Prepare Dataset
-Your custom dataset should be in **COCO** data format.<br>
+Your custom dataset should be in **COCO JSON** data format.<br>
+To convert **YOLO (.txt) / PASCAL VOC (.XML)** format to **COCO JSON**.<br>
+Using JSON Converter https://github.com/naseemap47/autoAnnoter#10-yolo_to_jsonpy <br>
 **COCO Data Format**:
 ```
 ├── Dataset
+|   ├── annotations
+│   │   ├── train.json
+│   │   ├── valid.json
+│   │   ├── test.json
 │   ├── train
-│   │   ├── images
-│   │   │   ├── 1.jpg
-│   │   │   ├── abc.png
-|   |   |   ├── ....
-│   │   ├── labels
-│   │   │   ├── 1.txt
-│   │   │   ├── abc.txt
-|   |   |   ├── ....
+│   │   ├── 1.jpg
+│   │   ├── abc.png
+|   |   ├── ....
 │   ├── val
-│   │   ├── images
-│   │   │   ├── 2.jpg
-│   │   │   ├── fram.png
-|   |   |   ├── ....
-│   │   ├── labels
-│   │   │   ├── 2.txt
-│   │   │   ├── fram.txt
-|   |   |   ├── ....
+│   │   ├── 2.jpg
+│   │   ├── fram.png
+|   |   ├── ....
 │   ├── test
-│   │   ├── images
-│   │   │   ├── img23.jpeg
-│   │   │   ├── 50.jpg
-|   |   |   ├── ....
-│   │   ├── labels
-│   │   │   ├── img23.txt
-│   │   │   ├── 50.txt
-|   |   |   ├── ....
+│   │   ├── img23.jpeg
+│   │   ├── 50.jpg
+|   |   ├── ....
 ```
 
 To training custom model using your custom data.
 You need to create [data.yaml](https://github.com/naseemap47/YOLO-NAS/blob/master/data.yaml)
 Example:
 ```
-names:
-- class1
-- class2
-- class3
-Dir: '/home/user/my_data'  # path to your custom data
+Dir: 'Data'
 images:
-  test: test/images
-  train: train/images
-  val: valid/images
+  test: test
+  train: train
+  val: valid
 labels:
-  test: test/labels
-  train: train/labels
-  val: valid/labels
+  test: annotations/test.json
+  train: annotations/train.json
+  val: annotations/valid.json
 ```
 
 ## 🤖 Train

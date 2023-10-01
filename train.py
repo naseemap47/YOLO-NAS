@@ -1,14 +1,21 @@
-from super_gradients.training.dataloaders.dataloaders import coco_detection_yolo_format_train, coco_detection_yolo_format_val
 from super_gradients.training.models.detection_models.pp_yolo_e import PPYoloEPostPredictionCallback
+from super_gradients.training.datasets.detection_datasets.coco_format_detection import COCOFormatDetectionDataset
+from super_gradients.training.transforms.transforms import DetectionMosaic, DetectionRandomAffine, DetectionHSV, \
+    DetectionHorizontalFlip, DetectionPaddedRescale, DetectionStandardize, DetectionTargetsFormatTransform
+from super_gradients.training.datasets.datasets_utils import worker_init_reset_seed
+from super_gradients.training.utils.detection_utils import CrowdDetectionCollateFN
 from super_gradients.training.metrics import DetectionMetrics_050
 from super_gradients.training.losses import PPYoloELoss
+from super_gradients.training import dataloaders
 from super_gradients.training import Trainer
 from super_gradients.training import models
 import argparse
 import torch
 import time
 import yaml
+import json
 import os
+
 
 
 if __name__ == '__main__':
@@ -52,15 +59,15 @@ if __name__ == '__main__':
                     help="LR Mode")
     ap.add_argument("--cosine_final_lr_ratio", type=float, default=0.1,
                     help="Cosine Final LR Ratio")
-    ap.add_argument("--optimizer", type=str, default='Adam',
+    ap.add_argument("--optimizer", type=str, default='AdamW',
                     help="Optimizer")
     ap.add_argument("--weight_decay", type=float, default=0.0001,
                     help="Weight Decay")
     args = vars(ap.parse_args())
 
+    # Start Time
     s_time = time.time()
 
-    
     if args['name'] is None:
         name = 'train'
     else:
@@ -77,8 +84,8 @@ if __name__ == '__main__':
                 break
             else:
                 n += 1
-                
     print(f"[INFO] Checkpoints saved in \033[1m{os.path.join('runs', name)}\033[0m")
+    
     # Training on GPU or CPU
     if args['cpu']:
         print('[INFO] Training on \033[1mCPU\033[0m')
@@ -90,67 +97,100 @@ if __name__ == '__main__':
         print(f'[INFO] Training on GPU: \033[1m{torch.cuda.get_device_name()}\033[0m')
         trainer = Trainer(experiment_name=name, ckpt_root_dir='runs')
 
+    # Load Path Params
     yaml_params = yaml.safe_load(open(args['data'], 'r'))
+    with open(os.path.join(yaml_params['Dir'], yaml_params['labels']['train'])) as f:
+        no_class = len(json.load(f)['categories'])
+        f.close()
+    print(f"\033[1m[INFO] Number of Classes: {no_class}\033[0m")
+    
+    # Reain Dataset
+    trainset = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
+                                      images_dir=yaml_params['images']['train'],
+                                      json_annotation_file=yaml_params['labels']['train'],
+                                      input_dim=(args['size'], args['size']),
+                                      ignore_empty_annotations=False,
+                                      transforms=[
+                                          DetectionMosaic(prob=1., input_dim=(args['size'], args['size'])),
+                                          DetectionRandomAffine(degrees=0., scales=(0.5, 1.5), shear=0.,
+                                                                target_size=(args['size'], args['size']),
+                                                                filter_box_candidates=False, border_value=128),
+                                          DetectionHSV(prob=1., hgain=5, vgain=30, sgain=30),
+                                          DetectionHorizontalFlip(prob=0.5),
+                                          DetectionPaddedRescale(input_dim=(args['size'], args['size']), max_targets=300),
+                                          DetectionStandardize(max_value=255),
+                                          DetectionTargetsFormatTransform(max_targets=300, input_dim=(args['size'], args['size']),
+                                                                          output_format="LABEL_CXCYWH")
+                                      ])
+    train_loader = dataloaders.get(dataset=trainset, dataloader_params={
+                                    "shuffle": True,
+                                    "batch_size": args['batch'],
+                                    "drop_last": False,
+                                    "pin_memory": True,
+                                    "collate_fn": CrowdDetectionCollateFN(),
+                                    "worker_init_fn": worker_init_reset_seed,
+                                    "min_samples": 512
+                                })
+    # Valid Data
+    valset = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
+                                    images_dir=yaml_params['images']['val'],
+                                    json_annotation_file=yaml_params['labels']['val'],
+                                    input_dim=(args['size'], args['size']),
+                                    ignore_empty_annotations=False,
+                                    transforms=[
+                                        DetectionPaddedRescale(input_dim=(args['size'], args['size']), max_targets=300),
+                                        DetectionStandardize(max_value=255),
+                                        DetectionTargetsFormatTransform(max_targets=300, input_dim=(args['size'], args['size']),
+                                                                        output_format="LABEL_CXCYWH")
+                                    ])
+    valid_loader = dataloaders.get(dataset=valset, dataloader_params={
+                                    "shuffle": False,
+                                    "batch_size": int(args['batch']*2),
+                                    "num_workers": args['worker'],
+                                    "drop_last": False,
+                                    "pin_memory": True,
+                                    "collate_fn": CrowdDetectionCollateFN(),
+                                    "worker_init_fn": worker_init_reset_seed
+                                })
 
-    train_data = coco_detection_yolo_format_train(
-        dataset_params={
-            'data_dir': yaml_params['Dir'],
-            'images_dir': yaml_params['images']['train'],
-            'labels_dir': yaml_params['labels']['train'],
-            'classes': yaml_params['names'],
-            'input_dim': (args['size'], args['size'])
-        },
-        dataloader_params={
-            'batch_size': args['batch'],
-            'num_workers': args['worker']
-        }
-    )
-
-    val_data = coco_detection_yolo_format_val(
-        dataset_params={
-            'data_dir': yaml_params['Dir'],
-            'images_dir': yaml_params['images']['val'],
-            'labels_dir': yaml_params['labels']['val'],
-            'classes': yaml_params['names'],
-            'input_dim': (args['size'], args['size'])
-        },
-        dataloader_params={
-            'batch_size':args['batch'],
-            'num_workers': args['worker']
-        }
-    )
-
+    # Test Data
     if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
-        test_data = coco_detection_yolo_format_val(
-            dataset_params={
-                'data_dir': yaml_params['Dir'],
-                'images_dir': yaml_params['images']['test'],
-                'labels_dir': yaml_params['labels']['test'],
-                'classes': yaml_params['names'],
-                'input_dim': (args['size'], args['size'])
-            },
-            dataloader_params={
-                'batch_size':args['batch'],
-                'num_workers': args['worker']
-            }
-        )
+        testset = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
+                                    images_dir=yaml_params['images']['test'],
+                                    json_annotation_file=yaml_params['labels']['test'],
+                                    input_dim=(args['size'], args['size']),
+                                    ignore_empty_annotations=False,
+                                    transforms=[
+                                        DetectionPaddedRescale(input_dim=(args['size'], args['size']), max_targets=300),
+                                        DetectionStandardize(max_value=255),
+                                        DetectionTargetsFormatTransform(max_targets=300, input_dim=(args['size'], args['size']),
+                                                                        output_format="LABEL_CXCYWH")
+                                    ])
+        test_loader = dataloaders.get(dataset=testset, dataloader_params={
+                                        "shuffle": False,
+                                        "batch_size": int(args['batch']*2),
+                                        "num_workers": args['worker'],
+                                        "drop_last": False,
+                                        "pin_memory": True,
+                                        "collate_fn": CrowdDetectionCollateFN(),
+                                        "worker_init_fn": worker_init_reset_seed
+                                    })
 
     # To Resume Training
     if args['resume']:
         model = models.get(
             args['model'],
-            num_classes=len(yaml_params['names']),
+            num_classes=no_class,
             checkpoint_path=args["weight"]
         )
     else:
         model = models.get(
             args['model'],
-            num_classes=len(yaml_params['names']), 
+            num_classes=no_class, 
             pretrained_weights=args["weight"]
         )
 
     train_params = {
-        # ENABLING SILENT MODE
         'silent_mode': False,
         "average_best_models":True,
         "warmup_mode": args['warmup_mode'],
@@ -168,15 +208,14 @@ if __name__ == '__main__':
         "mixed_precision": True,
         "loss": PPYoloELoss(
             use_static_assigner=False,
-            num_classes=len(yaml_params['names']),
+            num_classes=no_class,
             reg_max=16
         ),
         "valid_metrics_list": [
             DetectionMetrics_050(
                 score_thres=0.1,
                 top_k_predictions=300,
-                # NOTE: num_classes needs to be defined here
-                num_cls=len(yaml_params['names']),
+                num_cls=no_class,
                 normalize_targets=True,
                 post_prediction_callback=PPYoloEPostPredictionCallback(
                     score_threshold=0.01,
@@ -196,24 +235,25 @@ if __name__ == '__main__':
     # Print Training Params
     print('[INFO] Training Params:\n', train_params)
 
+    # Model Training...
     trainer.train(
         model=model, 
         training_params=train_params, 
-        train_loader=train_data, 
-        valid_loader=val_data
+        train_loader=train_loader, 
+        valid_loader=valid_loader
     )
 
     # Load best model
     best_model = models.get(args['model'],
-                            num_classes=len(yaml_params['names']),
+                            num_classes=no_class,
                             checkpoint_path=os.path.join('runs', name, 'ckpt_best.pth'))
     
     # Evaluating on Val Dataset
     eval_model = trainer.test(model=best_model,
-                    test_loader=val_data,
+                    test_loader=valid_loader,
                     test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
                                                         top_k_predictions=300, 
-                                                        num_cls=len(yaml_params['names']), 
+                                                        num_cls=no_class, 
                                                         normalize_targets=True, 
                                                         post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
                                                                                                                 nms_top_k=1000, 
@@ -227,10 +267,10 @@ if __name__ == '__main__':
     # Evaluating on Test Dataset
     if 'test' in (yaml_params['images'].keys() or yaml_params['labels'].keys()):
         test_result = trainer.test(model=best_model,
-                    test_loader=test_data,
+                    test_loader=test_loader,
                     test_metrics_list=DetectionMetrics_050(score_thres=0.1, 
                                                         top_k_predictions=300, 
-                                                        num_cls=len(yaml_params['names']), 
+                                                        num_cls=no_class, 
                                                         normalize_targets=True, 
                                                         post_prediction_callback=PPYoloEPostPredictionCallback(score_threshold=0.01, 
                                                                                                                 nms_top_k=1000, 
@@ -241,4 +281,3 @@ if __name__ == '__main__':
         for i in test_result:
             print(f"{i}: {float(test_result[i])}")
     print(f'[INFO] Training Completed in \033[1m{(time.time()-s_time)/3600} Hours\033[0m')
-    
