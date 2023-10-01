@@ -106,7 +106,6 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `--gpus`: Train on multiple gpus <br>
   `--cpu`: Train on CPU <br>
   `--resume`: To resume model training <br>
-  **Quantization Aware Training** <br>
   `--qat`: Quantization Aware Training <br>
   
   **Other Training Parameters:**<br>
@@ -130,6 +129,12 @@ python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yol
 ```
 python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m --size 640 \
                  --weight runs/train2/ckpt_latest.pth --resume
+```
+### Quantization Aware Training
+`--qat`: Quantization Aware Training <br>
+**Example:**
+```
+python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m --size 640 --qat
 ```
 
 ## 📺 Inference
