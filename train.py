@@ -113,7 +113,7 @@ if __name__ == '__main__':
     print(f"\033[1m[INFO] Number of Classes: {no_class}\033[0m")
     
     # Reain Dataset
-    train_dataset_params = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
+    trainset = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
                                       images_dir=yaml_params['images']['train'],
                                       json_annotation_file=yaml_params['labels']['train'],
                                       input_dim=(args['size'], args['size']),
@@ -140,7 +140,7 @@ if __name__ == '__main__':
                                 "min_samples": 512
                                 }
     # Valid Data
-    val_dataset_params = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
+    valset = COCOFormatDetectionDataset(data_dir=yaml_params['Dir'],
                                     images_dir=yaml_params['images']['val'],
                                     json_annotation_file=yaml_params['labels']['val'],
                                     input_dim=(args['size'], args['size']),
@@ -242,14 +242,15 @@ if __name__ == '__main__':
 
     # Quantization Aware Training
     if args['qat']:
-        train_params, train_dataset_params, val_dataset_params, train_dataloader_params, val_dataloader_params = modify_params_for_qat(
-            train_params, train_dataset_params, val_dataset_params, train_dataloader_params, val_dataloader_params
+        train_params, trainset, valset, train_dataloader_params, val_dataloader_params = modify_params_for_qat(
+            train_params, trainset, valset, train_dataloader_params, val_dataloader_params
         )
+        trainset = COCOFormatDetectionDataset(**trainset)
+        valset = COCOFormatDetectionDataset(**valset)
+
     # Print Training Params
     print('[INFO] Training Params:\n', train_params)
 
-    trainset = COCOFormatDetectionDataset(**train_dataset_params)
-    valset = COCOFormatDetectionDataset(**val_dataset_params)
     train_loader = dataloaders.get(dataset=trainset,
                                 dataloader_params=train_dataloader_params)
     valid_loader = dataloaders.get(dataset=valset,
