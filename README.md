@@ -122,6 +122,10 @@ You can train your **YOLO-NAS** model with **Single Command Line**
 **Example:**
 ```
 python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m --size 640
+
+# From Pre-trained weight
+python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m --size 640 \
+                 --weight runs/train2/ckpt_latest.pth
 ```
 ### If your training ends in 65th epoch (total 100 epochs), now you can start from 65th epoch and complete your 100 epochs training.
 **Example:**
