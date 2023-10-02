@@ -184,8 +184,8 @@ if __name__ == '__main__':
                                         "worker_init_fn": worker_init_reset_seed
                                     })
 
-    # To Resume Training
-    if args['resume']:
+    # To Resume Training or re-train
+    if args['resume'] or args["weight"].endswith('.pth'):
         model = models.get(
             args['model'],
             num_classes=no_class,
