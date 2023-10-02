@@ -40,7 +40,7 @@ cd YOLO-NAS
 ```
 conda create -n yolo-nas python=3.9 -y
 conda activate yolo-nas
-pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch -y
 # For Quantization Aware Training
 pip install pytorch-quantization==2.1.2 --extra-index-url https://pypi.ngc.nvidia.com
 pip install super-gradients==3.1.3
@@ -102,11 +102,10 @@ You can train your **YOLO-NAS** model with **Single Command Line**
   `-s`, `--size`: Input image size <br>
   `-j`, `--worker`: Training number of workers <br>
   `-m`, `--model`: Model type (Choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
-  `-w`, `--weight`: path to pre-trained model weight (default: `coco` weight) <br>
+  `-w`, `--weight`: path to pre-trained model weight (`ckpt_best.pth`) (default: `coco` weight) <br>
   `--gpus`: Train on multiple gpus <br>
   `--cpu`: Train on CPU <br>
   `--resume`: To resume model training <br>
-  `--qat`: Quantization Aware Training <br>
   
   **Other Training Parameters:**<br>
   `--warmup_mode`: Warmup Mode, eg: Linear Epoch Step <br>
@@ -130,11 +129,37 @@ python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yol
 python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m --size 640 \
                  --weight runs/train2/ckpt_latest.pth --resume
 ```
+
 ### Quantization Aware Training
-`--qat`: Quantization Aware Training <br>
+
+<details>
+  <summary>Args</summary>
+  
+  `-i`, `--data`: path to data.yaml <br>
+  `-b`, `--batch`: Training batch size <br>
+  `-e`, `--epoch`: number of training epochs.<br>
+  `-s`, `--size`: Input image size <br>
+  `-j`, `--worker`: Training number of workers <br>
+  `-m`, `--model`: Model type (Choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
+  `-w`, `--weight`: path to pre-trained model weight (`ckpt_best.pth`) <br>
+  `--gpus`: Train on multiple gpus <br>
+  `--cpu`: Train on CPU <br>
+  
+  **Other Training Parameters:**<br>
+  `--warmup_mode`: Warmup Mode, eg: Linear Epoch Step <br>
+  `--warmup_initial_lr`: Warmup Initial LR <br>
+  `--lr_warmup_epochs`: LR Warmup Epochs <br>
+  `--initial_lr`: Inital LR <br>
+  `--lr_mode`: LR Mode, eg: cosine <br>
+  `--cosine_final_lr_ratio`: Cosine Final LR Ratio <br>
+  `--optimizer`: Optimizer, eg: Adam <br>
+  `--weight_decay`: Weight Decay
+  
+</details>
+
 **Example:**
 ```
-python3 train.py --data /dir/dataset/data.yaml --batch 6 --epoch 100 --model yolo_nas_m --size 640 --qat
+python3 qat.py --data /dir/dataset/data.yaml --weight runs/train2/ckpt_best.pth --batch 6 --epoch 100 --model yolo_nas_m --size 640
 ```
 
 ## 📺 Inference
