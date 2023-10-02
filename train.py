@@ -68,11 +68,6 @@ if __name__ == '__main__':
                     help="Weight Decay")
     args = vars(ap.parse_args())
 
-    # Quantization Aware Training INFO
-    if args['qat']:
-        print("\x1b[6;37;41m [INFO] Quantization Aware Training \x1b[0m")
-        print("\x1b[1;37;41m [WARNING]: Quantization Aware Training Requires a Large Amount of System RAM \x1b[0m")
-
     # Start Time
     s_time = time.time()
 
@@ -294,23 +289,3 @@ if __name__ == '__main__':
         for i in test_result:
             print(f"{i}: {float(test_result[i])}")
     print(f'[INFO] Training Completed in \033[1m{(time.time()-s_time)/3600} Hours\033[0m')
-
-    # Quantization Aware Training
-    if args['qat']:
-        print("\x1b[1;37;41m [INFO]: Launching Quantization Aware Training \x1b[0m")
-        train_params, trainset, valset, train_dataloader_params, val_dataloader_params = modify_params_for_qat(
-            train_params, trainset, valset, train_dataloader_params, val_dataloader_params
-        )
-        train_loader = dataloaders.get(dataset=trainset,
-                                    dataloader_params=train_dataloader_params)
-        valid_loader = dataloaders.get(dataset=valset,
-                                    dataloader_params=val_dataloader_params)
-        # Quantization Aware Training
-        trainer.qat(
-            model=best_model, 
-            training_params=train_params, 
-            train_loader=train_loader, 
-            valid_loader=valid_loader, 
-            calib_loader=train_loader
-        )
-        print("\x1b[1;37;42m [SUCCESS]: Quantization Aware Training Completed \x1b[0m")
