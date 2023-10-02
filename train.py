@@ -239,15 +239,7 @@ if __name__ == '__main__':
     # to Resume Training
     if args['resume']:
         train_params['resume'] = True
-
-    # Quantization Aware Training
-    if args['qat']:
-        train_params, trainset, valset, train_dataloader_params, val_dataloader_params = modify_params_for_qat(
-            train_params, trainset, valset, train_dataloader_params, val_dataloader_params
-        )
-        trainset = COCOFormatDetectionDataset(**trainset)
-        valset = COCOFormatDetectionDataset(**valset)
-
+    
     # Print Training Params
     print('[INFO] Training Params:\n', train_params)
 
@@ -256,23 +248,13 @@ if __name__ == '__main__':
     valid_loader = dataloaders.get(dataset=valset,
                                 dataloader_params=val_dataloader_params)
                                 
-    # Quantization Aware Training
-    if args['qat']:
-        trainer.qat(
-            model=model, 
-            training_params=train_params, 
-            train_loader=train_loader, 
-            valid_loader=valid_loader, 
-            calib_loader=train_loader
-        )
-    else:
-        # Model Training...
-        trainer.train(
-            model=model, 
-            training_params=train_params, 
-            train_loader=train_loader, 
-            valid_loader=valid_loader
-        )
+    # Model Training...
+    trainer.train(
+        model=model, 
+        training_params=train_params, 
+        train_loader=train_loader, 
+        valid_loader=valid_loader
+    )
 
     # Load best model
     best_model = models.get(args['model'],
@@ -312,3 +294,23 @@ if __name__ == '__main__':
         for i in test_result:
             print(f"{i}: {float(test_result[i])}")
     print(f'[INFO] Training Completed in \033[1m{(time.time()-s_time)/3600} Hours\033[0m')
+
+    # Quantization Aware Training
+    if args['qat']:
+        print("\x1b[1;37;41m [INFO]: Launching Quantization Aware Training \x1b[0m")
+        train_params, trainset, valset, train_dataloader_params, val_dataloader_params = modify_params_for_qat(
+            train_params, trainset, valset, train_dataloader_params, val_dataloader_params
+        )
+        train_loader = dataloaders.get(dataset=trainset,
+                                    dataloader_params=train_dataloader_params)
+        valid_loader = dataloaders.get(dataset=valset,
+                                    dataloader_params=val_dataloader_params)
+        # Quantization Aware Training
+        trainer.qat(
+            model=best_model, 
+            training_params=train_params, 
+            train_loader=train_loader, 
+            valid_loader=valid_loader, 
+            calib_loader=train_loader
+        )
+        print("\x1b[1;37;42m [SUCCESS]: Quantization Aware Training Completed \x1b[0m")
