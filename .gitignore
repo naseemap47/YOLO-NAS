@@ -129,7 +129,18 @@ dmypy.json
 .pyre/
 
 # Data
-Data
+*.jpg
+*.jpeg
+*.png
+*.xml
+*.txt
+*.json
+*.yaml
+*.mp4
 
 # Train & Inference
-runs
+*.pth
+*.onnx
+*.pkl
+*.0
+*.1
