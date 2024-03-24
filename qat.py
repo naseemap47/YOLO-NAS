@@ -76,16 +76,16 @@ if __name__ == '__main__':
     print(f"\033[1m[INFO] Number of Classes: {no_class}\033[0m")
 
     # Training on GPU or CPU    
-    name, ckpt_dir = args['weight'].split('/')[-3:-1]
+    _, name = args['weight'].split('/')[-3:-1]
     if args['cpu']:
         print('[INFO] Training on \033[1mCPU\033[0m')
-        trainer = Trainer(experiment_name=name, ckpt_root_dir=ckpt_dir, device='cpu')
+        trainer = Trainer(experiment_name=name, ckpt_root_dir='qat', device='cpu')
     elif args['gpus']:
         print(f'[INFO] Training on GPU: \033[1m{torch.cuda.get_device_name()}\033[0m')
-        trainer = Trainer(experiment_name=name, ckpt_root_dir=ckpt_dir, multi_gpu=args['gpus'])
+        trainer = Trainer(experiment_name=name, ckpt_root_dir='qat', multi_gpu=args['gpus'])
     else:
         print(f'[INFO] Training on GPU: \033[1m{torch.cuda.get_device_name()}\033[0m')
-        trainer = Trainer(experiment_name=name, ckpt_root_dir=ckpt_dir)
+        trainer = Trainer(experiment_name=name, ckpt_root_dir='qat')
 
     # Load best model
     best_model = models.get(args['model'],
