@@ -36,19 +36,31 @@ git clone https://github.com/naseemap47/YOLO-NAS.git
 cd YOLO-NAS
 ```
 ### Install dependencies
-**Recommended**:
+Create anaconda python environment
 ```
 conda create -n yolo-nas python=3.9 -y
 conda activate yolo-nas
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch -y
+```
+**PyTorch v1.11.0** Installation
+```
+# conda installation
+conda install pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 cudatoolkit=11.3 -c pytorch -y
+
+/// OR
+
+# PIP installation
+pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
+```
+**Quantization Aware Training**
+```
 # For Quantization Aware Training
 pip install pytorch-quantization==2.1.2 --extra-index-url https://pypi.ngc.nvidia.com
+```
+Install **Super-Gradients**
+```
 pip install super-gradients==3.1.3
 ```
-#### OR
-```
-pip3 install -r requirements.txt
-```
+
 ### 🎒 Prepare Dataset
 Your custom dataset should be in **COCO JSON** data format.<br>
 To convert **YOLO (.txt) / PASCAL VOC (.XML)** format to **COCO JSON**.<br>
