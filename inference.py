@@ -9,7 +9,7 @@ import os
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-n", "--num", type=int, required=True,
+ap.add_argument("-n", "--num", type=int, required=False,
                 help="number of classes the model trained on")
 ap.add_argument("-m", "--model", type=str, default='yolo_nas_s',
                 choices=['yolo_nas_s', 'yolo_nas_m', 'yolo_nas_l'],
@@ -52,12 +52,17 @@ def get_bbox(img):
     return labels
 
 
+# Load COCO YOLO-NAS Model
+if args["weight"] == "coco":
+    model = models.get(args['model'], pretrained_weights="coco")
 # Load YOLO-NAS Model
-model = models.get(
-    args['model'],
-    num_classes=args['num'], 
-    checkpoint_path=args["weight"]
-)
+else:
+    model = models.get(
+        args['model'],
+        num_classes=args['num'], 
+        checkpoint_path=args["weight"]
+    )
+
 model = model.to("cuda" if torch.cuda.is_available() else "cpu")
 class_names = model.predict(np.zeros((1,1,3)), conf=args['conf'])._images_prediction_lst[0].class_names
 print('Class Names: ', class_names)

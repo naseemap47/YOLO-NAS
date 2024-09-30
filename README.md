@@ -191,7 +191,7 @@ You can Inference your **YOLO-NAS** model with **Single Command Line**
   
   `-n`, `--num`: Number of classes the model trained on <br>
   `-m`, `--model`: Model type (choices: `yolo_nas_s`, `yolo_nas_m`, `yolo_nas_l`) <br>
-  `-w`, `--weight`: path to trained model weight <br>
+  `-w`, `--weight`: path to trained model weight, for COCO model: `coco` <br>
   `-s`, `--source`: video path/cam-id/RTSP <br>
   `-c`, `--conf`: model prediction confidence (0<conf<1) <br>
   `--save`: to save video <br>
@@ -200,7 +200,13 @@ You can Inference your **YOLO-NAS** model with **Single Command Line**
 </details>
 
 **Example:**
+```bash
+# For COCO YOLO-NAS Model
+python3 inference.py --model yolo_nas_s --weight coco --source 0                              # Camera
+python3 inference.py --model yolo_nas_m --weight coco --source /test/video.mp4 --conf 0.66    # video
 ```
+
+```bash
 python3 inference.py --num 3 --model yolo_nas_m --weight /runs/train4/ckpt_best.pth --source /test/video.mp4 --conf 0.66           # video
                                                                                     --source /test/sample.jpg --conf 0.5 --save    # Image save
                                                                                     --source /test/video.mp4 --conf 0.75 --hide    # to save and hide video window
